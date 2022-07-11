@@ -13,7 +13,7 @@ set(HUNTER_PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 pico_sdk_init()
 
 # Add multi example
-add_subdirectory(multi-testing)
+add_subdirectory(Cricket_Lab_Week_1)
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
