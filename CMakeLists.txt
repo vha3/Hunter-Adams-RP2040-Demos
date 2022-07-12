@@ -20,9 +20,7 @@ add_subdirectory(Lab_3_Week_1)
 add_subdirectory(Lab_3_Week_2)
 add_subdirectory(Protothreads_Demo)
 add_subdirectory(Resistive_Touchscreen_Demo)
-add_subdirectory(Stepper_Position_And_Speed_Control)
-add_subdirectory(Stepper_Position_Control)
-add_subdirectory(Stepper_Speed_Control)
+add_subdirectory(Stepper_Motors)
 add_subdirectory(VGA_Graphics_Demo)
 
 add_compile_options(-Wall
