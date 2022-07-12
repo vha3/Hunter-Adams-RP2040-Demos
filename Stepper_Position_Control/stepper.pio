@@ -1,0 +1,30 @@
+
+.program stepper
+
+wait 1 irq 3            ; Wait for signal to put pulse on pins
+out pins, 4             ; Put a pulse on the pins, AUTOPULL ENGAGED
+
+% c-sdk {
+static inline void stepper_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   
+   pio_sm_config c = stepper_program_get_default_config(offset);
+
+   sm_config_set_out_pins(&c, pin, 4);
+
+   // Note that max clock divider is 65536. We insert a one cycle delay
+   // in the assembler to run the motors slowly enough
+   sm_config_set_clkdiv(&c, 65000) ;
+
+   // Setup autopull, 32-bit threshold, right-shift OSR
+   sm_config_set_out_shift(&c, 1, 1, 4) ;
+
+   pio_gpio_init(pio, pin);
+   pio_gpio_init(pio, pin+1);
+   pio_gpio_init(pio, pin+2);
+   pio_gpio_init(pio, pin+3);
+
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 4, true);
+   
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}

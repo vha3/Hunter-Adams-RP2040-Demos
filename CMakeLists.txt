@@ -19,6 +19,7 @@ add_subdirectory(Lab_2_Week_1)
 add_subdirectory(Lab_3_Week_1)
 add_subdirectory(Lab_3_Week_2)
 add_subdirectory(Protothreads_Demo)
+add_subdirectory(Stepper_Position_Control)
 add_subdirectory(VGA_Graphics_Demo)
 
 add_compile_options(-Wall
