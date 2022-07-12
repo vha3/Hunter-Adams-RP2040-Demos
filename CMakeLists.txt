@@ -14,9 +14,8 @@ pico_sdk_init()
 
 # Add multi example
 add_subdirectory(Lab_1)
-add_subdirectory(Lab_2_Week_1)
-add_subdirectory(Lab_3_Week_1)
-add_subdirectory(Lab_3_Week_2)
+add_subdirectory(Lab_2)
+add_subdirectory(Lab_3)
 add_subdirectory(Protothreads_Demo)
 add_subdirectory(Resistive_Touchscreen_Demo)
 add_subdirectory(Simple_DAC_Demo)
