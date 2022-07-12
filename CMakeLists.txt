@@ -16,6 +16,7 @@ pico_sdk_init()
 add_subdirectory(Lab_1_Week_1)
 add_subdirectory(Lab_1_Week_3)
 add_subdirectory(Lab_2_Week_1)
+add_subdirectory(Lab_3_Week_1)
 add_subdirectory(Lab_3_Week_2)
 add_subdirectory(Protothreads_Demo)
 
