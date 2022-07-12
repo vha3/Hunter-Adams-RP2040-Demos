@@ -19,6 +19,7 @@ add_subdirectory(Lab_2_Week_1)
 add_subdirectory(Lab_3_Week_1)
 add_subdirectory(Lab_3_Week_2)
 add_subdirectory(Protothreads_Demo)
+add_subdirectory(VGA_Graphics_Demo)
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
