@@ -1,0 +1,22 @@
+
+.program counter
+
+pull block                   ; Copy commanded # of steps from FIFO to OSR
+mov x, osr                   ; Copy value from OSR to scratch X
+
+countloop:
+   irq wait 2               ; Signal for a step to occur, wait for flag to clear
+   jmp x-- countloop        ; Loop until X hits 0
+
+irq wait 0                  ; IRQ to CPU ISR, wait for CPU to clear
+
+
+
+
+% c-sdk {
+static inline void counter_program_init(PIO pio, uint sm, uint offset) {
+   
+   pio_sm_config c = counter_program_get_default_config(offset);
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}
