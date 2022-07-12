@@ -1,0 +1,2 @@
+add_subdirectory(Audio_Beep_Synthesis)
+add_subdirectory(Audio_FFT)

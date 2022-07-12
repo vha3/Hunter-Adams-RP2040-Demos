@@ -13,8 +13,7 @@ set(HUNTER_PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 pico_sdk_init()
 
 # Add multi example
-add_subdirectory(Lab_1_Week_1)
-add_subdirectory(Lab_1_Week_3)
+add_subdirectory(Lab_1)
 add_subdirectory(Lab_2_Week_1)
 add_subdirectory(Lab_3_Week_1)
 add_subdirectory(Lab_3_Week_2)
