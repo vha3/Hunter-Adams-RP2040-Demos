@@ -1,0 +1,20 @@
+
+.program pacer1
+
+out x, 32                     ; Shift value from OSR to scratch X (AUTOPULL ENGAGED)
+
+countloop:
+    jmp x-- countloop        ; Loop until X hits 0
+
+irq 4                        ; Signal to send a pulse
+
+
+
+% c-sdk {
+static inline void pacer1_program_init(PIO pio, uint sm, uint offset) {
+   
+   pio_sm_config c = pacer1_program_get_default_config(offset);
+   sm_config_set_out_shift(&c, 1, 1, 32) ;
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}
