@@ -541,9 +541,8 @@ struct pt_sem {
 //=== BRL4 additions for rp2040 =======================================
 //=====================================================================
 
-// macro to time a thread execution interveal in usec
-// max time 
-
+// macro to make a thread execution pause in usec
+// max time of about one hour
 #define PT_YIELD_usec(delay_time)  \
     do { static unsigned int time_thread ;\
     time_thread = timer_hw->timerawl + (unsigned int)delay_time ; \
@@ -551,8 +550,18 @@ struct pt_sem {
     } while(0);
 
 // macro to return system time
-#define PT_GET_TIME_uSec() (timer_hw->timerawl)
+#define PT_GET_TIME_usec() (timer_hw->timerawl)
 
+// macros for interval yield
+// attempts to make interval equal to specified value
+#define PT_INTERVAL_INIT() static unsigned int pt_interval_marker
+//
+#define PT_YIELD_INTERVAL(interval_time)  \
+    do { \
+    PT_YIELD_UNTIL(pt, (timer_hw->timerawl >= pt_interval_marker)); \
+    pt_interval_marker = timer_hw->timerawl + (unsigned int)interval_time; \
+    } while(0);
+//
 // =================================================================
 // core-safe semaphore based on hardware/sync library
 // a hardware spinlock to force core-safe alternation
@@ -588,7 +597,7 @@ spin_lock_t * sem_lock ;
 } while(0)
 
 // ==================================================================
-// lock based directly on spin-locks
+// lock based directly on spin-lock hardware
 // core-safe lock based on hardware/sync library
 // a non-counting hardware spinlock to force core-safe signalling
 #define UNLOCKED 0
@@ -618,7 +627,6 @@ spin_lock_t * lock_lock ;
   spin_lock_unsafe_blocking (s); \
   spin_unlock_unsafe (lock_lock) ; \
 } while(0)
-  //expanded: PT_YIELD_UNTIL(pt, is_spin_locked(s)==false); 
 
 #define PT_LOCK_RELEASE(s) do{ \
     spin_unlock_unsafe (s) ; \
