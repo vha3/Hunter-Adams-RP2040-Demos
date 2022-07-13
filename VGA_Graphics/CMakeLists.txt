@@ -1,2 +1,3 @@
+add_subdirectory(Barnsley_Fern)
 add_subdirectory(Mandelbrot_Set)
 add_subdirectory(VGA_Graphics_Primitives)
