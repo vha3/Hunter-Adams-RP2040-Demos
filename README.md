@@ -7,3 +7,5 @@ This is a collection of RP2040 examples created and assembled for ECE 4760 at Co
 > - [Lab 1](https://vanhunteradams.com/Pico/Cricket/Crickets.html): Cricket Chirp Synthesis and Synchronization
 > - [Lab 2](https://vanhunteradams.com/Pico/Animal_Movement/Animal_Movement.html): Modeling Decision Making in Animal Groups on the Move
 > - **Lab 3**: PID Control of an Inverted Pendulum with a Reaction Wheel
+
+***
