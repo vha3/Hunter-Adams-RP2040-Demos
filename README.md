@@ -1,7 +1,7 @@
 # Demo Code for the Raspberry Pi Pico
 #### [V. Hunter Adams](https://vanhunteradams.com)
 
-This is a collection of RP2040 examples assembled for ECE 4760 at Cornell. ECE 4760 students are asked to clone this repository and add their own lab assignments and projects.
+This is a collection of RP2040 examples created and assembled for ECE 4760 at Cornell. ECE 4760 students are asked to clone this repository and add their own lab assignments and projects.
 
 The Lab_1, Lab_2, and Lab_3 folders contain the examples from which I recommend you start for each of your labs. I recommend that you add your own Lab 1, 2, and 3 projects to each of those folders, respectively.
 
