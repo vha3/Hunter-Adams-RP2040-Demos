@@ -21,7 +21,7 @@ add_subdirectory(Resistive_Touchscreen_Demo)
 add_subdirectory(Simple_DAC_Demo)
 add_subdirectory(Simple_GPIO_Interrupt_Demo)
 add_subdirectory(Stepper_Motors)
-add_subdirectory(VGA_Graphics_Demo)
+add_subdirectory(VGA_Graphics)
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int

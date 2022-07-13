@@ -1,0 +1,2 @@
+add_subdirectory(Mandelbrot_Set)
+add_subdirectory(VGA_Graphics_Primitives)
