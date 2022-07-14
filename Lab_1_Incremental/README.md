@@ -13,6 +13,7 @@
 #### Multicore DDS Demo
 - Uses two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
 - Those sine waves are amplitude-modulated to "beeps".
+- [Significant documentation for this example](https://vanhunteradams.com/Pico/DAC/DMA_DAC.html)
 #### Protothreads Demo
 - A thorough demonstration of Protothreads.
 #### Audio Beep Synthesis
