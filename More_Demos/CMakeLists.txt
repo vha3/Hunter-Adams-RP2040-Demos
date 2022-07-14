@@ -1,0 +1,2 @@
+add_subdirectory(Resistive_Touchscreen_Demo)
+add_subdirectory(GPIO_Interrupt_Demo)
