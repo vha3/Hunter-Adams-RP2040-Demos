@@ -19,4 +19,8 @@ If you are an ECE 4760 student, please note that the toolchain is *already insta
 
 ## How do I use them?
 
-If you are an ECE 4760 student, you will clone this repository into the same directory which contains your copy of the [pico sdk](https://github.com/raspberrypi/pico-sdk). For Lab 1, you'll add a folder to the [Lab_1](Lab_1) directory. For Lab 2, you'll add a folder to the [Lab_2](Lab_2) directory. And for Lab 3, you'll add a folder to the [Lab_3](Lab_3) directory. Each of those folders contains the demos from which you should start each lab. The [Lab_1_Incremental](Lab_1_Incremental) directory contains a sequence of demos that incrementally builds to the starting demos from which you start Lab 1.
+If you are an ECE 4760 student, you will clone this repository into the same directory which contains your copy of the [pico sdk](https://github.com/raspberrypi/pico-sdk). 
+
+For Lab 1, you'll add a folder to the [Lab_1](Lab_1) directory. For Lab 2, you'll add a folder to the [Lab_2](Lab_2) directory. And for Lab 3, you'll add a folder to the [Lab_3](Lab_3) directory. Each of those folders contains the demos from which you should start each lab. The [Lab_1_Incremental](Lab_1_Incremental) directory contains a sequence of demos that incrementally builds to the starting demos from which you start Lab 1.
+
+For your final project, you will add a folder to the root directory.
