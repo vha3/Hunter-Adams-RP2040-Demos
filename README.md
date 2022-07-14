@@ -1,5 +1,5 @@
 # Demo Code for the Raspberry Pi Pico
-#### [V. Hunter Adams](https://vanhunteradams.com) - vha3@cornell.edu
+#### [V. Hunter Adams](https://vanhunteradams.com)
 
 ## What are these demos?
 
