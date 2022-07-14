@@ -2,7 +2,7 @@
 
 
 ## Weeks 1 and 2
-- **Blinky Demo**
+#### Blinky Demo
 > - Blinks the Pico's onboard LED by toggling a GPIO port.
 > - The "Hello world!" of a new microcontroller.
 - **Timer Interrupt Demo**: Blinks the onboard LED inside a timer interrupt.
