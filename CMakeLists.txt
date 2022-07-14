@@ -23,6 +23,7 @@ add_subdirectory(Simple_DAC_Demo)
 add_subdirectory(Simple_DMA_Demo)
 add_subdirectory(Simple_GPIO_Interrupt_Demo)
 add_subdirectory(Stepper_Motors)
+add_subdirectory(Timer_Interrupt_Demo)
 add_subdirectory(VGA_Graphics)
 
 add_compile_options(-Wall
