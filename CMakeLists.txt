@@ -13,6 +13,7 @@ set(HUNTER_PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 pico_sdk_init()
 
 # Add multi example
+add_subdirectory(Blinky_Demo)
 add_subdirectory(Lab_1)
 add_subdirectory(Lab_2)
 add_subdirectory(Lab_3)
