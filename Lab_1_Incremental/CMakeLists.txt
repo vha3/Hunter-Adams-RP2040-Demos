@@ -1,0 +1,8 @@
+add_subdirectory(a_Blinky_Demo)
+add_subdirectory(b_Timer_Interrupt_Demo)
+add_subdirectory(c_Timer_Interrupt_DDS_Demo)
+add_subdirectory(d_Multicore_DDS_Demo)
+add_subdirectory(e_Protothreads_Demo)
+add_subdirectory(f_Audio_Beep_Synthesis)
+add_subdirectory(g_DMA_Demo)
+add_subdirectory(h_Audio_FFT)

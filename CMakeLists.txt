@@ -13,18 +13,13 @@ set(HUNTER_PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 pico_sdk_init()
 
 # Add multi example
-add_subdirectory(Blinky_Demo)
 add_subdirectory(Lab_1)
+add_subdirectory(Lab_1_Incremental)
 add_subdirectory(Lab_2)
 add_subdirectory(Lab_3)
-add_subdirectory(Multicore_DDS_Demo)
-add_subdirectory(Protothreads_Demo)
 add_subdirectory(Resistive_Touchscreen_Demo)
-add_subdirectory(Simple_DAC_Demo)
-add_subdirectory(Simple_DMA_Demo)
 add_subdirectory(Simple_GPIO_Interrupt_Demo)
 add_subdirectory(Stepper_Motors)
-add_subdirectory(Timer_Interrupt_Demo)
 add_subdirectory(VGA_Graphics)
 
 add_compile_options(-Wall
