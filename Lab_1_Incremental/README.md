@@ -15,7 +15,7 @@
 - Uses two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
 - Those sine waves are amplitude-modulated to "beeps".
 - [More info on Fixed Point](https://vanhunteradams.com/FixedPoint/FixedPoint.html)
-- [Significant documentation for this example](https://vanhunteradams.com/Pico/Multi/MultiCore.html)
+- [Documentation for this example](https://vanhunteradams.com/Pico/Multi/MultiCore.html)
 #### Protothreads Demo
 - A thorough demonstration of Protothreads.
 - [Documentation from Bruce](https://people.ece.cornell.edu/land/courses/ece4760/RP2040/C_SDK_protothreads/index_Protothreads.html)
