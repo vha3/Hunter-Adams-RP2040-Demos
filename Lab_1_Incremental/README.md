@@ -5,6 +5,7 @@
 #### Blinky Demo
 - Blinks the Pico's onboard LED by toggling a GPIO port.
 - The "Hello world!" of a new microcontroller.
+- [Documentation for this example](https://vanhunteradams.com/Pico/Setup/UsingPicoSDK.html)
 #### Timer Interrupt Demo
 - Blinks the onboard LED inside a timer interrupt.
 #### Timer Interrupt DDS Demo
