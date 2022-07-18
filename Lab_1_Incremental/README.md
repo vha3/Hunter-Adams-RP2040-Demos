@@ -20,7 +20,7 @@
 #### Protothreads Demo
 - A thorough demonstration of Protothreads.
 - [Documentation from Bruce](https://people.ece.cornell.edu/land/courses/ece4760/RP2040/C_SDK_protothreads/index_Protothreads.html)
-#### Audio Beep Synthesis
+#### Audio Beep Synthesis - *Starting point for Weeks 1 and 2!*
 - Uses Protothreads and two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
 - Those sine waves are amplitude-modulated to "beeps".
 - Starting point for Weeks 1 and 2 checkoffs
@@ -28,8 +28,7 @@
 ## Week 3
 #### DMA Demo
 - Uses a DMA channel to send a sine wave out through an SPI channel to the DAC.
-#### Audio FFT
+#### Audio FFT - *Starting point for Week 3!*
 - Uses a DMA channel to gather samples from the ADC, then performs an FFT on the gathered samples and displays to the VGA.
 - [More info on FFT's](https://vanhunteradams.com/FFT/FFT.html)
 - [Documentation for this example](https://vanhunteradams.com/Pico/VGA/FFT.html)
-- The starting point for the Week 3 checkoff
