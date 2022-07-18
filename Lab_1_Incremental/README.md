@@ -9,11 +9,9 @@ In [Lab 1](https://vanhunteradams.com/Pico/Cricket/Crickets.html) you are asked 
 - The "Hello world!" of a new microcontroller.
 - [Documentation for this example](https://vanhunteradams.com/Pico/Setup/UsingPicoSDK.html)
 #### Timer Interrupt DDS Demo
-- Blinky demo is augmented to include a timer interrupt, and SPI communication to a DAC.
-- Timer interrupt performs Direct Digital Synthesis of a sine wave, which is output through the SPI DAC. 
+- Blinky demo is augmented to include a timer interrupt, and [SPI communication](https://vanhunteradams.com/Protocols/SPI/SPI.html) to a DAC.
+- Timer interrupt performs [Direct Digital Synthesis](https://vanhunteradams.com/DDS/DDS.html) of a sine wave, which is output through the SPI DAC. 
 - Note the differences in the CMakeLists.txt file, and in the includes!
-- [More info on DDS](https://vanhunteradams.com/DDS/DDS.html).
-- [More info on SPI](https://vanhunteradams.com/Protocols/SPI/SPI.html)
 - [Documentation for this example](https://vanhunteradams.com/Pico/TimerIRQ/SPI_DDS.html)
 #### Multicore DDS Demo
 - Uses two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
