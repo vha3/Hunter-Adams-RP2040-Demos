@@ -28,6 +28,5 @@ In [Lab 1](https://vanhunteradams.com/Pico/Cricket/Crickets.html) you are asked 
 - Uses a DMA channel to send a sine wave out through an SPI channel to the DAC.
 - [**Documentation for this example**](https://vanhunteradams.com/Pico/DAC/DMA_DAC.html)
 #### Audio FFT - *Starting point for Week 3!*
-- Uses a DMA channel to gather samples from the ADC, then performs an FFT on the gathered samples and displays to the VGA.
-- [More info on FFT's](https://vanhunteradams.com/FFT/FFT.html)
+- Uses a DMA channel to gather samples from the ADC, then performs an [FFT](https://vanhunteradams.com/FFT/FFT.html) on the gathered samples and displays to the VGA.
 - [**Documentation for this example**](https://vanhunteradams.com/Pico/VGA/FFT.html)
