@@ -10,6 +10,7 @@
 - Uses a timer interrupt to perform Direct Digital Synthesis of a sine wave, which is output through an SPI DAC. 
 - Note the differences in the CMakeLists.txt file.
 - [More info on DDS](https://vanhunteradams.com/DDS/DDS.html).
+- [More info on SPI](https://vanhunteradams.com/Protocols/SPI/SPI.html)
 #### Multicore DDS Demo
 - Uses two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
 - Those sine waves are amplitude-modulated to "beeps".
