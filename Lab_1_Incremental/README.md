@@ -27,6 +27,7 @@
 ## Week 3
 #### DMA Demo
 - Uses a DMA channel to send a sine wave out through an SPI channel to the DAC.
+- [Documentation for this example](https://vanhunteradams.com/Pico/DAC/DMA_DAC.html)
 #### Audio FFT - *Starting point for Week 3!*
 - Uses a DMA channel to gather samples from the ADC, then performs an FFT on the gathered samples and displays to the VGA.
 - [More info on FFT's](https://vanhunteradams.com/FFT/FFT.html)
