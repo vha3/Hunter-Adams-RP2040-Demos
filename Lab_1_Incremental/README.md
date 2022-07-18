@@ -7,8 +7,9 @@
 - The "Hello world!" of a new microcontroller.
 - [Documentation for this example](https://vanhunteradams.com/Pico/Setup/UsingPicoSDK.html)
 #### Timer Interrupt DDS Demo
-- Uses a timer interrupt to perform Direct Digital Synthesis of a sine wave, which is output through an SPI DAC. 
-- Note the differences in the CMakeLists.txt file.
+- Blinky demo is augmented to include a timer interrupt, and SPI communication to a DAC.
+- Timer interrupt performs Direct Digital Synthesis of a sine wave, which is output through the SPI DAC. 
+- Note the differences in the CMakeLists.txt file, and in the includes!
 - [More info on DDS](https://vanhunteradams.com/DDS/DDS.html).
 - [More info on SPI](https://vanhunteradams.com/Protocols/SPI/SPI.html)
 #### Multicore DDS Demo
@@ -29,4 +30,6 @@
 - Uses a DMA channel to send a sine wave out through an SPI channel to the DAC.
 #### Audio FFT
 - Uses a DMA channel to gather samples from the ADC, then performs an FFT on the gathered samples and displays to the VGA.
+- [More info on FFT's](https://vanhunteradams.com/FFT/FFT.html)
+- [Documentation for this example](https://vanhunteradams.com/Pico/VGA/FFT.html)
 - The starting point for the Week 3 checkoff
