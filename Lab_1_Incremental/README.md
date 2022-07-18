@@ -23,7 +23,6 @@
 #### Audio Beep Synthesis - *Starting point for Weeks 1 and 2!*
 - Uses Protothreads and two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
 - Those sine waves are amplitude-modulated to "beeps".
-- Starting point for Weeks 1 and 2 checkoffs
 
 ## Week 3
 #### DMA Demo
