@@ -1,5 +1,7 @@
 # Incremental construction of Lab 1 demo code
 
+In [Lab 1](https://vanhunteradams.com/Pico/Cricket/Crickets.html) you are asked to synthesize and synchronize snowy tree cricket chirps. In this lab, as in all labs, you are provided with demo code from which to start your assignment. This repository contains a sequence of example projects which incrementally build to the demo code from which you should start your assignment. The documentation for each of these examples is meant to be read *in order*, starting from the Blinky Demo and moving down.
+
 
 ## Weeks 1 and 2
 #### Blinky Demo
