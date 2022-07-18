@@ -14,6 +14,7 @@ In [Lab 1](https://vanhunteradams.com/Pico/Cricket/Crickets.html) you are asked 
 - Note the differences in the CMakeLists.txt file, and in the includes!
 - [More info on DDS](https://vanhunteradams.com/DDS/DDS.html).
 - [More info on SPI](https://vanhunteradams.com/Protocols/SPI/SPI.html)
+- [Documentation for this example](https://vanhunteradams.com/Pico/TimerIRQ/SPI_DDS.html)
 #### Multicore DDS Demo
 - Uses two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
 - Those sine waves are amplitude-modulated to "beeps".
