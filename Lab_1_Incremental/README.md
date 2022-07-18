@@ -6,8 +6,6 @@
 - Blinks the Pico's onboard LED by toggling a GPIO port.
 - The "Hello world!" of a new microcontroller.
 - [Documentation for this example](https://vanhunteradams.com/Pico/Setup/UsingPicoSDK.html)
-#### Timer Interrupt Demo
-- Blinks the onboard LED inside a timer interrupt.
 #### Timer Interrupt DDS Demo
 - Uses a timer interrupt to perform Direct Digital Synthesis of a sine wave, which is output through an SPI DAC. 
 - Note the differences in the CMakeLists.txt file.
