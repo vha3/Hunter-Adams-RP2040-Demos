@@ -26,6 +26,9 @@
 volatile unsigned int phase_accum_main;
 volatile unsigned int phase_incr_main = (800.0*two32)/Fs ;//
 
+// SPI data
+uint16_t DAC_data ; // output value
+
 //DAC parameters
 // A-channel, 1x, active
 #define DAC_config_chan_A 0b0011000000000000
@@ -42,9 +45,6 @@ volatile unsigned int phase_incr_main = (800.0*two32)/Fs ;//
 // DDS sine table
 #define sine_table_size 256
 volatile int sin_table[sine_table_size] ;
-
-// SPI data
-uint16_t DAC_data ; // output value
 
 // Timer ISR
 bool repeating_timer_callback(struct repeating_timer *t) {
