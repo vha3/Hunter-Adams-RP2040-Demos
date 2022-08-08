@@ -1,5 +1,7 @@
-add_executable(dactest dactest.c)
+add_executable(dactest)
 
-pico_add_extra_outputs(dactest)
+target_sources(dactest dactest.c)
 
 target_link_libraries(dactest pico_stdlib hardware_spi)
+
+pico_add_extra_outputs(dactest)
