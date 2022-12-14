@@ -17,7 +17,7 @@ unsigned char ethernet_source[6]      = {} ;
 
 // IP source and destination addresses. Source address will be that of the Pico.
 unsigned char ip_source[4]  = {169, 254, 123, 101};
-unsigned char ip_dest[4]    = {169, 254, 177, 93};
+unsigned char ip_dest[4]    = {169, 254, 4, 174};
 
 // UPD source and destination ports (set to a default of 1024)
 unsigned char udp_src_port[2] = {0x04, 0x00} ; // 1024
