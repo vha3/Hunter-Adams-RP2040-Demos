@@ -1,0 +1,155 @@
+;
+; V. Hunter Adams (vha3@cornell.edu)
+;
+; PIO programs for UDP transmit
+;
+
+.program manchester_tx
+.side_set 2 opt
+
+; Transmit one bit every 8 cycles. a '0' is encoded as a high-low sequence
+; (each part lasting half a bit period, or 4 cycles) and a '1' is encoded as a
+; low-high sequence.
+;
+
+.wrap_target
+do_1:
+    nop         side 0b01 [3] ; Low for 3 cycles (2 delay, +1 for nop)
+    jmp get_bit side 0b10     ; High for 1 cycles. 'get_bit' takes another 2 cycles
+do_0:
+    nop         side 0b10 [3] ; Output high for 3 cycles
+    nop         side 0b01     ; Output low for 1 cycles
+public start:
+get_bit:
+    out x, 1               ; Always shift out one bit from OSR to X, so we can
+    wait 0 irq 0           ; Make sure pulse is not active
+    jmp !x do_0            ; branch on it. Autopull refills the OSR when empty.
+.wrap
+
+% c-sdk {
+static inline void manchester_tx_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+
+    // Default configs
+    pio_sm_config c = manchester_tx_program_get_default_config(offset);
+
+    // Map the base sideset pin
+    sm_config_set_sideset_pins(&c, pin);
+
+    // Autopull threshold to 8
+    sm_config_set_out_shift(&c, true, true, 8);
+
+    // Clock div
+    sm_config_set_clkdiv(&c, div);
+
+    // Set GPIO function to gpio
+    pio_gpio_init(pio, pin);
+    pio_gpio_init(pio, pin+1);
+
+    // Initialize pins as logically low
+    pio_sm_set_pins_with_mask(pio, sm, 0, (1u << (pin+1)));
+    pio_sm_set_pins_with_mask(pio, sm, 1, (1u << (pin)));
+
+    // Set pindirs as output
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, true);
+
+    // Load configuration, jump to start of program (plus offset)
+    pio_sm_init(pio, sm, offset + manchester_tx_offset_start, &c);
+
+    // Don't enable yet
+    pio_sm_set_enabled(pio, sm, false);
+}
+%}
+
+.program tp_idl
+
+start:
+    out x, 32          ;   32 bits from OSR to x scratch (autopull enabled, stalls here)
+pause:
+    jmp x-- pause      ;
+
+set pins, 2    [23] ;   Pulse high for 3 bit times (8 cycles per bit)
+set pins, 0    [31] ;   Pulse low for idle time
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+set pins, 0    [31] ;
+irq 1               ;   Signal transaction complete to CPU
+
+% c-sdk {
+static inline void tp_idl_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+    // Default configs
+    pio_sm_config c = tp_idl_program_get_default_config(offset);
+
+    // Map the set pins ("pin" is lowest, final argument is number to map)
+    sm_config_set_set_pins(&c, pin, 2);
+
+    // Autopull threshold to 32
+    sm_config_set_out_shift(&c, true, true, 32);
+
+    // Clock div
+    sm_config_set_clkdiv(&c, div);
+
+    // Set GPIO function to gpio
+    pio_gpio_init(pio, pin);
+    pio_gpio_init(pio, pin+1);
+
+    // Set pindirs as output
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, true);
+
+    // Load configuration, jump to start of program (plus offset)
+    pio_sm_init(pio, sm, offset, &c);
+
+    // Don't enable yet
+    pio_sm_set_enabled(pio, sm, false);
+}
+%}
+
+
+.program nlp
+
+start:
+    out x, 32           ;   32 bits from OSR to x scratch (autopull enabled, stalls here)
+    irq 0               ;   Assert interrupt 0
+    set pins, 2 [5]     ;   Pulse for 100 ns
+    set pins, 0 [5]     ;   End pulse (both lines idle)
+    irq clear 0         ;   Clear interrupt 0
+
+% c-sdk {
+static inline void nlp_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+    // Default configs
+    pio_sm_config c = nlp_program_get_default_config(offset);
+
+    // Map the set pins ("pin" is lowest, final argument is number to map)
+    sm_config_set_set_pins(&c, pin, 2);
+
+    // Autopull threshold to 32
+    sm_config_set_out_shift(&c, true, true, 32);
+
+    // Clock div
+    sm_config_set_clkdiv(&c, div);
+
+    // Set GPIO function to gpio
+    pio_gpio_init(pio, pin);
+    pio_gpio_init(pio, pin+1);
+
+    // Set pindirs as output
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, true);
+
+    // Load configuration, jump to start of program (plus offset)
+    pio_sm_init(pio, sm, offset, &c);
+
+    // Don't enable yet
+    pio_sm_set_enabled(pio, sm, false);
+}
+%}
