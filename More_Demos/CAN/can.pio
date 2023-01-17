@@ -1,0 +1,313 @@
+;
+; V. Hunter Adams (vha3@cornell.edu)
+;
+; PIO programs for CAN transciever
+;
+
+; Change either of these parameters however you like (zero indexed, or minus one)
+.define RECESSIVE_EOF_THRESHOLD 15 				; (16 bits)
+.define RX_IDLE_BIT_TIME 7 						; (8 bit times)
+
+; Changing this paramter requires modification of RX machine
+.define EDGE_SEARCH_TIME 3
+
+;; ================================================================================================
+
+
+.program idle_check
+
+entry:
+	wait 1 irq 1 						; wait for irq 1, then clear it
+	out x, 32 							; Shift 32 bits from OSR to x (autopull)
+	
+idle_check:
+	jmp pin spin_wait 					; if pin is high (idle), jump to decrementer
+	out x, 32 							;
+
+spin_wait:
+	jmp x-- idle_check [30] 			; wait a bit time, then go back to idle_check or fall thru
+
+finished:
+	irq wait 2 							; set irq 2, wait for it to clear
+
+
+% c-sdk {
+static inline void idle_check_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+
+    // Default configs
+    pio_sm_config c = idle_check_program_get_default_config(offset);
+
+    // Map the jmp pin
+    sm_config_set_jmp_pin(&c, pin) ;
+
+    // (pointer to sm config, shift right, autopull off, threshold set to 32 bits)
+    sm_config_set_out_shift(&c, true, true, 32);
+
+    // Clock div
+    sm_config_set_clkdiv(&c, div);
+
+    // Set GPIO function to gpio (out pin, and jmp input pin)
+    pio_gpio_init(pio, pin);
+
+    // Set pindirs
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
+
+    // Load configuration, jump to start of program (plus offset)
+    pio_sm_init(pio, sm, offset, &c);
+
+    // Don't enable yet
+    pio_sm_set_enabled(pio, sm, false);
+}
+%}
+
+;; ================================================================================================
+;; ================================================================================================
+
+.program can_tx
+
+;;
+;; Standby portion of program, waiting for a message to transmit
+;; 
+
+standby:
+	pull block 							; sits here until arbitration appears in the TX fifo (16 bits)
+	mov y, osr 							; copy contents of osr to y scratch
+
+;;
+;; Message received, stalling until bus is idle
+;;
+
+reset_osr:
+	mov osr, y 							; Copy contents of osr to y scratch
+	set x, 0 							; Initialize x scratch to zero (likely not required, already 0)
+
+spin_wait:
+	irq wait 1 							; Set irq 1, wait for it to clera
+	wait 1 irq 2 						; Wait for irq 2, then clear it
+	jmp pin to_pins 					; put start of frame out to pins, then start arbitration
+	jmp spin_wait 						; otherwise, try again
+
+;;
+;; Bus is idle, doing arbitration.
+;;
+
+check_collision:
+	jmp pin nextbit  	    			; Value should be 1, else fall thru to collision [24]
+
+collision:
+	jmp reset_osr 						; Go try again if there was a collision
+
+bitout:
+	out x, 1 [5]        				; Shifts 1 bit from OSR to x scratch [26-31]
+
+to_pins:
+	mov pins, x     					; Put bit out onto pin [0]
+	jmp x-- check_collision [22]		; Put one on the pins, check if zero, else fall thru [1-23]
+	nop 								; Same path length for 0 and 1 [24]
+
+nextbit:
+	jmp !OSRE bitout					; Prepare to put next bit out onto pins [25]
+
+;;
+;; Won arbitration, sending rest of message. Stop at EOF indicator.
+;;
+
+message_data:
+	set y, RECESSIVE_EOF_THRESHOLD [2]	; reset recessive EOF counter [26-28] (know x is zero here)
+
+pull_data:
+	pull block [1]						; Pull next 16 bits of data [29-30]
+
+another_bit_out:
+	out x, 1 							; Shift 1 bit from OSR to x scratch [31]
+	mov pins, x 						; Put that bit onto the bus [0]
+	jmp x-- recessive_out [24]			; If bit was recessive, jump to recessive_out [1-25]
+	set y, RECESSIVE_EOF_THRESHOLD 		; Reset recessive EOF counter if bit was dominant [26]
+
+next_bit_again:
+	jmp !OSRE path_correction 			; If OSR is not empty, shift out another bit [27]
+	jmp pull_data 						; Else pull data [28]
+
+path_correction:
+	jmp another_bit_out [2]				; [28-30]
+
+recessive_out:
+	jmp y-- next_bit_again 				; If EOF counter nonzero, check OSR then pull or output a bit [26]
+
+transaction_complete:
+	irq wait 0 							; Signal transaction complete to CPU, wait for ack
+										; No jump required, loops back to standby
+
+% c-sdk {
+static inline void can_tx_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+
+    // Default configs
+    pio_sm_config c = can_tx_program_get_default_config(offset);
+
+    // Map the base out (mov) pin and the jmp pin
+    sm_config_set_out_pins(&c, pin, 1);
+    sm_config_set_jmp_pin(&c, pin+1) ;
+
+    // (pointer to sm config, shift left, autopull off, threshold set to 16 bits)
+    sm_config_set_out_shift(&c, false, false, 16);
+
+    // Clock div
+    sm_config_set_clkdiv(&c, div);
+
+    // Set GPIO function to gpio (out pin, and jmp input pin)
+    pio_gpio_init(pio, pin);
+    pio_gpio_init(pio, pin+1);
+
+    // Set pindirs
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, pin+1, 1, false);
+
+    // Initialize output pin as logically high
+    pio_sm_set_pins(pio, sm, 0x40) ;
+
+    // Load configuration, jump to start of program (plus offset)
+    pio_sm_init(pio, sm, offset, &c);
+
+    // Don't enable yet
+    pio_sm_set_enabled(pio, sm, false);
+}
+%}
+
+;; ================================================================================================
+;; ================================================================================================
+
+;;
+;; CAN RX state machine (goes on opposite PIO block to TX)
+;;
+
+.program can_rx
+
+standby:
+	set x, RX_IDLE_BIT_TIME 		; How long must bus be stable before we're allowed to receive?
+
+idle_check:
+	jmp pin spin_wait 				; If bus is idle, jump to spin_wait [0-1]
+	set x, RX_IDLE_BIT_TIME 		; Otherwise reset the idle bit time
+
+spin_wait:
+	jmp x-- idle_check [30]			; If bus is idle, go back to idle_check and decrement x.
+									; Falls through when RX_IDLE_BIT_TIME has passed
+bus_idle:
+	jmp pin bus_idle 				; Stalls here until start of frame [0-1]
+
+glitch_check:
+	nop [20] 						; Wait to check for a glitch [21-23]
+ 	jmp pin standby [1]				; If pin is high again, this was a glitch, go back to standby [23-25]
+ 	jmp got_dominant 				; Otherwise, go start gathering a packet [25-26]
+
+got_recessive:
+	set y, EDGE_SEARCH_TIME			; How long will we look for an edge? [26-27]
+	jmp x-- dom_edge_search 		; Did we receive 10 recessives? Else fall thru [27-28]
+
+EOF:
+	push block 						; Push remaining bits to RX FIFO
+	irq wait 0 						; Signal message available to CPU
+	jmp standby 					; Wait for next message
+
+dom_edge_search:
+	jmp pin dom_edge_decrementer 	; Pin high, decrement edge search counter [28-29, 30-31, 0-1, 2-3], [0-1]
+	jmp sync_delay 					; Otherwise, go grab that dominant bit [1-2]
+
+dom_edge_decrementer:
+	jmp y-- dom_edge_search 		; Look for falling edge y times [29-30, 31-0, 1-2, 3-4]
+	jmp get_bit [19]				; Else grab another recessive bit [23-24]
+
+recessive_delay:
+	nop 							; Same path length for dominant/recessive edges [2-3]
+
+sync_delay:
+	nop [20]						; Delay after a synchronization event [23-24]
+
+get_bit:
+	in pins, 1 						; Grab a big, shift into ISR (autopush at 16) [24-25]
+	jmp pin got_recessive 			; Did we get a recessive bit? [25-26]
+
+got_dominant:
+	set x, RECESSIVE_EOF_THRESHOLD 	; If not, reset the recessive EOF counter [26-27]
+	set y, EDGE_SEARCH_TIME			; How long will we look for an edge? [27-28]
+
+recessive_edge_search:
+	jmp pin recessive_delay 		; If pin goes high, go get a bit [28-29, 30-31, 0-1, 2-3], [0-1]
+	jmp y-- recessive_edge_search 	; Keep looking for an edge [29-30, 31-0, 1-2, 3-4]
+	jmp get_bit [19]				; Go get another dominant bit [23-24]
+
+
+% c-sdk {
+static inline void can_rx_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+
+    // Default configs
+    pio_sm_config c = can_rx_program_get_default_config(offset);
+
+    // Map the base out (mov) pin and the jmp pin
+    sm_config_set_in_pins(&c, pin);
+    sm_config_set_jmp_pin(&c, pin) ;
+
+    // (pointer to sm config, shift left, autopush on, threshold set to 8 bits)
+    sm_config_set_in_shift(&c, false, true, 8);
+
+    // Clock div
+    sm_config_set_clkdiv(&c, div);
+
+    // Set GPIO function to gpio (out pin, and jmp input pin)
+    pio_gpio_init(pio, pin);
+
+    // Set pindirs
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
+
+    // Load configuration, jump to start of program
+    pio_sm_init(pio, sm, offset, &c);
+
+    // Don't enable yet
+    pio_sm_set_enabled(pio, sm, false);
+}
+%}
+
+
+
+
+;;; A version for fixed-length packet. Better to be length-agnostic, I think
+;message_data:
+;	set x, 2 							; How many 16-bit words are in the message, minus 1? [26]
+;	set y, 8						 	; How many remaining bits at the end, minus 2 [27]
+;	jmp pull_data 						; Jump to pull data [28]
+;
+;path_correction:
+;	nop [2]								; [29-31]
+;
+;word_out:
+;	out pins, 1 						; Put a bit out on the pins [0]
+;	jmp !OSRE path_correction [27]		; Jump back to do it again until OSR is empty [1-28]
+;
+;pull_data:
+;	pull block 							; Pull next 16 bits of data [29]
+;	jmp x-- word_out [1]				; While x nonzero, jump to word_out [30-31]
+;
+;last_bits_out:
+;	out pins, 1 						; Put a bit out on the pins [0]
+;	jmp y-- last_bits_out [30]			; Keep doing so for remaining bits [1-31]
+;
+;transaction_complete:
+;	irq wait 0 							; Signal transaction complete to CPU, wait for ack
+										; No jump required, loops back to standby
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
