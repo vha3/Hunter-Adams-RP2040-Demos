@@ -15,7 +15,6 @@ pico_sdk_init()
 # Add multi example
 add_subdirectory(Lab_1)
 add_subdirectory(Lab_1_Incremental)
-add_subdirectory(Lab_2)
 add_subdirectory(Lab_3)
 add_subdirectory(More_Demos)
 add_subdirectory(Stepper_Motors)
