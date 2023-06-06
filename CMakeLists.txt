@@ -19,7 +19,7 @@ add_subdirectory(Lab_3)
 add_subdirectory(More_Demos)
 add_subdirectory(Stepper_Motors)
 add_subdirectory(VGA_Graphics)
-add_subdirectory(Ethernet)
+add_subdirectory(Networking)
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
