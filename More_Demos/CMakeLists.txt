@@ -1,5 +1,3 @@
 add_subdirectory(Resistive_Touchscreen_Demo)
 add_subdirectory(GPIO_Interrupt_Demo)
 add_subdirectory(Memory_Experiment)
-add_subdirectory(AM_Radio_Voice)
-add_subdirectory(AM_Radio_Beacon)
