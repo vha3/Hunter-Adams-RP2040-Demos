@@ -1,2 +1,0 @@
-add_subdirectory(MPU6050_IMU_Demo)
-add_subdirectory(PWM_Demo)
