@@ -1,5 +1,4 @@
 # Demo Code for the Raspberry Pi Pico
-## (I will be rearranging these directories over the next week to make demos easier to find)
 #### [V. Hunter Adams](https://vanhunteradams.com)
 
 ## What are these demos?
