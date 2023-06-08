@@ -13,8 +13,6 @@ You might also find [Lectures 1-7](https://www.youtube.com/playlist?list=PLDqMkB
 - This example includes a timer interrupt, and [SPI communication](https://vanhunteradams.com/Protocols/SPI/SPI.html) to a DAC.
 - The timer interrupt performs [Direct Digital Synthesis](https://vanhunteradams.com/DDS/DDS.html) of a sine wave, which is output through the [SPI DAC](https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/20002249B.pdf). 
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/t-sYuRkEEtg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
 - [**Documentation for this example**](https://vanhunteradams.com/Pico/TimerIRQ/SPI_DDS.html)
 #### Multicore DDS Demo
 - Uses two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
