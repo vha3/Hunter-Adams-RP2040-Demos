@@ -1,0 +1,57 @@
+;
+; Hunter Adams (vha3@cornell.edu)
+; RGB generation for VGA driver
+
+; Program name
+.program rgb
+
+pull block 					; Pull from FIFO to OSR (only once)
+mov y, osr 					; Copy value from OSR to y scratch register
+.wrap_target
+
+set pins, 0 				; Zero RGB pins in blanking
+mov x, y 					; Initialize counter variable
+
+wait 1 irq 1 [3]			; Wait for vsync active mode (starts 5 cycles after execution)
+
+colorout:
+	pull block				; Pull color value
+	out pins, 3	[4]			; Push out to pins (first pixel)
+	out pins, 3	[2]			; Push out to pins (next pixel)
+	jmp x-- colorout		; Stay here thru horizontal active mode
+
+.wrap
+
+
+% c-sdk {
+static inline void rgb_program_init(PIO pio, uint sm, uint offset, uint pin) {
+
+    // creates state machine configuration object c, sets
+    // to default configurations. I believe this function is auto-generated
+    // and gets a name of <program name>_program_get_default_config
+    // Yes, page 40 of SDK guide
+    pio_sm_config c = rgb_program_get_default_config(offset);
+
+    // Map the state machine's SET and OUT pin group to three pins, the `pin`
+    // parameter to this function is the lowest one. These groups overlap.
+    sm_config_set_set_pins(&c, pin, 3);
+    sm_config_set_out_pins(&c, pin, 3);
+
+    // Set clock division (Commented out, this one runs at full speed)
+    // sm_config_set_clkdiv(&c, 5) ;
+
+    // Set this pin's GPIO function (connect PIO to the pad)
+    pio_gpio_init(pio, pin);
+    pio_gpio_init(pio, pin+1);
+    pio_gpio_init(pio, pin+2);
+    
+    // Set the pin direction to output at the PIO (3 pins)
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 3, true);
+
+    // Load our configuration, and jump to the start of the program
+    pio_sm_init(pio, sm, offset, &c);
+
+    // Set the state machine running (commented out, I'll start this in the C)
+    // pio_sm_set_enabled(pio, sm, true);
+}
+%}
