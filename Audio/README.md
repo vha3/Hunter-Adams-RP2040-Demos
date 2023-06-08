@@ -18,7 +18,11 @@ Lab 1 for [ECE 4760](https://ece4760.github.io) changes from year to year, but i
 #### Protothreads Demo
 - A thorough demonstration of Protothreads, a lightweight threading library which will be used in *every lab*.
 - [**Documentation from Bruce**](https://people.ece.cornell.edu/land/courses/ece4760/RP2040/C_SDK_protothreads/index_Protothreads.html)
-#### Audio Beep Synthesis
+#### Audio Beep Synthesis Single Core
+- Uses a timer interrupt to perform Direct Digital Synthsis of a sine wave out of a single core
+- This sine wave is amplitude-modulated into a "beep"
+- Incorporates Protothreads
+#### Audio Beep Synthesis Multicore
 - Uses Protothreads and two timer interrupts to perform Direct Digital Synthesis of two sine waves, one on each of the two cores of the RP2040. 
 - Those sine waves are amplitude-modulated to "beeps".
 #### DMA Demo
