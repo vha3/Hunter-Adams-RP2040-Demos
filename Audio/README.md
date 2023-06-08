@@ -20,7 +20,7 @@ You might also find [Lectures 1-7](https://www.youtube.com/playlist?list=PLDqMkB
 #### Protothreads Demo
 - A thorough demonstration of Protothreads, a lightweight threading library which will be used in *every lab*.
 - [**Documentation from Bruce**](https://people.ece.cornell.edu/land/courses/ece4760/RP2040/C_SDK_protothreads/index_Protothreads.html)
-#### Audio Beep Synthesis Single Core
+#### Audio Beep Synthesis Single Core <--- *Starting point for Lab 1*
 - Uses a timer interrupt to perform Direct Digital Synthsis of a sine wave out of a single core
 - This sine wave is amplitude-modulated into a "beep"
 - Incorporates Protothreads
