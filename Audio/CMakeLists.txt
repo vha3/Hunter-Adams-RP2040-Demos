@@ -1,6 +1,7 @@
 add_subdirectory(a_Timer_Interrupt_DDS_Demo)
 add_subdirectory(b_Multicore_DDS_Demo)
 add_subdirectory(c_Protothreads_Demo)
+add_subdirectory(d_Audio_Beep_Synthesis_Single_Core)
 add_subdirectory(e_Audio_Beep_Synthesis_Multicore)
 add_subdirectory(f_DMA_Demo)
 add_subdirectory(g_Audio_FFT)
