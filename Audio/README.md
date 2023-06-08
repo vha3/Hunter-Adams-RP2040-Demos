@@ -2,6 +2,8 @@
 
 Lab 1 for [ECE 4760](https://ece4760.github.io) changes from year to year, but it always involves audio synthesis and/or audio digital signal processing. This repository contains a sequence of example audio projects which incrementally add complexity. The documentation for these examples is meant to be read *in order*, starting form the Timer Interrupt DDS Demo and moving down. This repository exists both to help you gain an understanding of the demo code provided for Lab 1, and also to help me introduce the Lab 1 content in class.
 
+You might also find [Lectures 1-7](https://www.youtube.com/playlist?list=PLDqMkB5cbBA5oDg8VXM110GKc-CmvUqEZ) useful for these demos.
+
 
 <!-- #### Blinky Demo
 - Blinks the Pico's onboard LED by toggling a GPIO port.
