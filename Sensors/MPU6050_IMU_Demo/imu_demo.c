@@ -217,8 +217,8 @@ int main() {
     i2c_init(I2C_CHAN, I2C_BAUD_RATE) ;
     gpio_set_function(SDA_PIN, GPIO_FUNC_I2C) ;
     gpio_set_function(SCL_PIN, GPIO_FUNC_I2C) ;
-    gpio_pull_up(SDA_PIN) ;
-    gpio_pull_up(SCL_PIN) ;
+    // gpio_pull_up(SDA_PIN) ;
+    // gpio_pull_up(SCL_PIN) ;
 
     // MPU6050 initialization
     mpu6050_reset();
