@@ -24,6 +24,11 @@
 
 #include "hardware/pwm.h"
 
+// Low-level alarm infrastructure we'll be using
+#define ALARM_NUM 0
+#define ALARM_IRQ TIMER_IRQ_0
+#define DELAY 1000 // 1/Fs (in microseconds) - 1KHz tone
+
 // PWM wrap value and clock divide value
 // For a CPU rate of 250 MHz, this gives
 // a PWM frequency of 50MHz
@@ -44,8 +49,14 @@ int control_chan = 3 ;
 unsigned int counter ;
 unsigned int state ;
 
-// Timer ISR
-bool repeating_timer_callback(struct repeating_timer *t) {
+// Alarm ISR
+static void alarm_irq(void) {
+
+    // Clear the alarm irq
+    hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM);
+
+    // Reset the alarm register
+    timer_hw->alarm[ALARM_NUM] = timer_hw->timerawl + DELAY ;
 
     // Generate 1KHz tone
     if (counter < 1000){
@@ -67,7 +78,6 @@ bool repeating_timer_callback(struct repeating_timer *t) {
         counter = 0 ;
     }
     counter += 1 ;
-    return true;
 }
 
 
@@ -104,15 +114,14 @@ int main() {
     ////////////////////////////////////////////////////////////////////////
     /////////////////////////// REPEATING TIMER ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
-    // Create a repeating timer that calls repeating_timer_callback.
-    // If the delay is > 0 then this is the delay between the previous callback ending and the next starting.
-    // If the delay is negative (see below) then the next call to the callback will be exactly x us after the
-    // start of the call to the last callback
-    struct repeating_timer timer;
-
-    // Negative delay so means we will call repeating_timer_callback, and call it again
-    // 25us (40kHz) later regardless of how long the callback took to execute
-    add_repeating_timer_us(-1000, repeating_timer_callback, NULL, &timer);
+    // Enable the interrupt for the alarm (we're using Alarm 0)
+    hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM) ;
+    // Associate an interrupt handler with the ALARM_IRQ
+    irq_set_exclusive_handler(ALARM_IRQ, alarm_irq) ;
+    // Enable the alarm interrupt
+    irq_set_enabled(ALARM_IRQ, true) ;
+    // Write the lower 32 bits of the target time to the alarm register, arming it.
+    timer_hw->alarm[ALARM_NUM] = timer_hw->timerawl + DELAY ;
 
     while(1) {
 

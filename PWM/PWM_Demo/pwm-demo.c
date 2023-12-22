@@ -6,7 +6,7 @@
  * user-specified value.
  * 
  * HARDWARE CONNECTIONS
- *   - GPIO 5 ---> PWM output
+ *   - GPIO 4 ---> PWM output
  * 
  */
 #include <stdio.h>
@@ -20,13 +20,16 @@
 #include "hardware/pwm.h"
 #include "hardware/irq.h"
 
-#include "pt_cornell_rp2040_v1.h"
+#include "pt_cornell_rp2040_v1_3.h"
 
 // PWM wrap value and clock divide value
 // For a CPU rate of 125 MHz, this gives
 // a PWM frequency of 1 kHz.
 #define WRAPVAL 5000
 #define CLKDIV 25.0f
+
+// GPIO we're using for PWM
+#define PWM_OUT 4
 
 // Variable to hold PWM slice number
 uint slice_num ;
@@ -38,11 +41,11 @@ volatile int old_control ;
 // PWM interrupt service routine
 void on_pwm_wrap() {
     // Clear the interrupt flag that brought us here
-    pwm_clear_irq(pwm_gpio_to_slice_num(5));
+    pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT));
     // Update duty cycle
     if (control!=old_control) {
         old_control = control ;
-        pwm_set_chan_level(slice_num, PWM_CHAN_B, control);
+        pwm_set_chan_level(slice_num, PWM_CHAN_A, control);
     }
 }
 
@@ -73,11 +76,11 @@ int main() {
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////// PWM CONFIGURATION ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
-    // Tell GPIO 5 that it is allocated to the PWM
-    gpio_set_function(5, GPIO_FUNC_PWM);
+    // Tell GPIO PWM_OUT that it is allocated to the PWM
+    gpio_set_function(PWM_OUT, GPIO_FUNC_PWM);
 
-    // Find out which PWM slice is connected to GPIO 5 (it's slice 2)
-    slice_num = pwm_gpio_to_slice_num(5);
+    // Find out which PWM slice is connected to GPIO PWM_OUT (it's slice 2)
+    slice_num = pwm_gpio_to_slice_num(PWM_OUT);
 
     // Mask our slice's IRQ output into the PWM block's single interrupt line,
     // and register our interrupt handler
@@ -91,7 +94,7 @@ int main() {
     pwm_set_clkdiv(slice_num, CLKDIV) ;
 
     // This sets duty cycle
-    pwm_set_chan_level(slice_num, PWM_CHAN_B, 3125);
+    pwm_set_chan_level(slice_num, PWM_CHAN_A, 3125);
 
     // Start the channel
     pwm_set_mask_enabled((1u << slice_num));
