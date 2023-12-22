@@ -19,6 +19,14 @@
     Creation of an alarm pool is required to force a timer interrupt to
     take place on core 1 rather than core 0.
 
+    GPIO 5 (pin 7) Chip select
+    GPIO 6 (pin 9) SCK/spi0_sclk
+    GPIO 7 (pin 10) MOSI/spi0_tx
+    GPIO 2 (pin 4) GPIO output for timing ISR on core 0
+    GPIO 3 (pin 5) GPIO output for timing ISR on core 1
+    3.3v (pin 36) -> VCC on DAC 
+    GND (pin 3)  -> GND on DAC 
+
  */
 
 #include <stdio.h>
@@ -27,6 +35,8 @@
 #include "pico/multicore.h"
 #include "hardware/sync.h"
 #include "hardware/spi.h"
+#include "hardware/timer.h"
+#include "hardware/irq.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15 ;
@@ -39,9 +49,18 @@ typedef signed int fix15 ;
 #define char2fix15(a) (fix15)(((fix15)(a)) << 15)
 #define divfix(a,b) (fix15)( (((signed long long)(a)) << 15) / (b))
 
+// Alarm infrastructure that we'll be using
+#define ALARM_NUM_0 0
+#define ALARM_NUM_1 1
+#define ALARM_IRQ_0 TIMER_IRQ_0
+#define ALARM_IRQ_1 TIMER_IRQ_1
+
 //DDS parameters
 #define two32 4294967296.0 // 2^32 
-#define Fs 40000
+#define Fs 50000
+#define DELAY 20 // 1/Fs (in microseconds)
+
+
 // the DDS units - core 1
 volatile unsigned int phase_accum_main_1;
 volatile unsigned int phase_incr_main_1 = (800.0*two32)/Fs ;
@@ -49,13 +68,16 @@ volatile unsigned int phase_incr_main_1 = (800.0*two32)/Fs ;
 volatile unsigned int phase_accum_main_0;
 volatile unsigned int phase_incr_main_0 = (400.0*two32)/Fs ;
 
+
 // DDS sine table
 #define sine_table_size 256
 fix15 sin_table[sine_table_size] ;
 
+
 // Values output to DAC
 int DAC_output_0 ;
 int DAC_output_1 ;
+
 
 // Amplitude modulation parameters and variables
 fix15 max_amplitude = int2fix15(1) ;
@@ -63,21 +85,24 @@ fix15 attack_inc ;
 fix15 decay_inc ;
 fix15 current_amplitude_0 = 0 ;
 fix15 current_amplitude_1 = 0 ;
-#define ATTACK_TIME             200
-#define DECAY_TIME              200
+#define ATTACK_TIME             250
+#define DECAY_TIME              250
 #define SUSTAIN_TIME            10000
-#define BEEP_DURATION           10400
-#define BEEP_REPEAT_INTERVAL    40000
+#define BEEP_DURATION           10500
+#define BEEP_REPEAT_INTERVAL    50000
+
 
 //SPI data
 uint16_t DAC_data_1 ; // output value
 uint16_t DAC_data_0 ; // output value
+
 
 //DAC parameters
 // A-channel, 1x, active
 #define DAC_config_chan_A 0b0011000000000000
 // B-channel, 1x, active
 #define DAC_config_chan_B 0b1011000000000000
+
 
 //SPI configurations
 #define PIN_MISO 4
@@ -86,6 +111,11 @@ uint16_t DAC_data_0 ; // output value
 #define PIN_MOSI 7
 #define LDAC     8
 #define SPI_PORT spi0
+
+
+// GPIO's for ISR timing
+#define ISR_0 2
+#define ISR_1 3
 
 // Two variables to store core number
 volatile int corenum_0  ;
@@ -104,8 +134,77 @@ volatile unsigned int count_0 = 0 ;
 volatile unsigned int STATE_1 = 0 ;
 volatile unsigned int count_1 = 0 ;
 
+// This one is called on core 0
+static void alarm_irq_0(void) {
+
+    // Assert GPIO for timing interrupt
+    gpio_put(ISR_0, 1) ;
+
+    // Clear the alarm irq
+    hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM_0);
+
+    // Reset the alarm register
+    timer_hw->alarm[ALARM_NUM_0] = timer_hw->timerawl + DELAY ;
+
+    if (STATE_0 == 0) {
+        // DDS phase and sine table lookup
+        phase_accum_main_0 += phase_incr_main_0  ;
+        DAC_output_0 = fix2int15(multfix15(current_amplitude_0,
+            sin_table[phase_accum_main_0>>24])) + 2048 ;
+
+        // Ramp up amplitude
+        if (count_0 < ATTACK_TIME) {
+            current_amplitude_0 = (current_amplitude_0 + attack_inc) ;
+        }
+        // Ramp down amplitude
+        else if (count_0 > BEEP_DURATION - DECAY_TIME) {
+            current_amplitude_0 = (current_amplitude_0 - decay_inc) ;
+        }
+
+        DAC_data_0 = (DAC_config_chan_B | (DAC_output_0 & 0xffff))  ;
+
+        // SPI write (no spinlock b/c of SPI buffer)
+        spi_write16_blocking(SPI_PORT, &DAC_data_0, 1) ;
+
+        // Increment the counter
+        count_0 += 1 ;
+
+        // State transition?
+        if (count_0 == BEEP_DURATION) {
+            STATE_0 = 1 ;
+            count_0 = 0 ;
+        }
+    }
+
+    // State transition?
+    else {
+        count_0 += 1 ;
+        if (count_0 == BEEP_REPEAT_INTERVAL) {
+            current_amplitude_0 = 0 ;
+            STATE_0 = 0 ;
+            count_0 = 0 ;
+        }
+    }
+
+    // retrieve core number of execution
+    corenum_0 = get_core_num() ;
+
+    // De-assert GPIO for timing interrupt
+    gpio_put(ISR_0, 0) ;
+
+}
+
 // This one is called on core 1
-bool repeating_timer_callback_core_1(struct repeating_timer *t) {
+static void alarm_irq_1(void) {
+
+    // Assert GPIO for timing interrupt
+    gpio_put(ISR_1, 1) ;
+
+    // Clear the alarm irq
+    hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM_1);
+
+    // Reset the alarm register
+    timer_hw->alarm[ALARM_NUM_1] = timer_hw->timerawl + DELAY ;
 
     if (STATE_1 == 0) {
         // DDS phase and sine table lookup
@@ -151,71 +250,21 @@ bool repeating_timer_callback_core_1(struct repeating_timer *t) {
     // retrieve core number of execution
     corenum_1 = get_core_num() ;
 
-    return true;
-}
+    // De-assert GPIO for timing interrupt
+    gpio_put(ISR_1, 0) ;
 
-// This one is called on core 0
-bool repeating_timer_callback_core_0(struct repeating_timer *t) {
-
-    if (STATE_0 == 0) {
-        // DDS phase and sine table lookup
-        phase_accum_main_0 += phase_incr_main_0  ;
-        DAC_output_0 = fix2int15(multfix15(current_amplitude_0,
-            sin_table[phase_accum_main_0>>24])) + 2048 ;
-
-        // Ramp up amplitude
-        if (count_0 < ATTACK_TIME) {
-            current_amplitude_0 = (current_amplitude_0 + attack_inc) ;
-        }
-        // Ramp down amplitude
-        else if (count_0 > BEEP_DURATION - DECAY_TIME) {
-            current_amplitude_0 = (current_amplitude_0 - decay_inc) ;
-        }
-
-        DAC_data_0 = (DAC_config_chan_B | (DAC_output_0 & 0xffff))  ;
-
-        // SPI write (no spinlock b/c of SPI buffer)
-        spi_write16_blocking(SPI_PORT, &DAC_data_0, 1) ;
-
-        // Increment the counter
-        count_0 += 1 ;
-
-        // State transition?
-        if (count_0 == BEEP_DURATION) {
-            STATE_0 = 1 ;
-            count_0 = 0 ;
-        }
-    }
-
-    // State transition?
-    else {
-        count_0 += 1 ;
-        if (count_0 == BEEP_REPEAT_INTERVAL) {
-            current_amplitude_0 = 0 ;
-            STATE_0 = 0 ;
-            count_0 = 0 ;
-        }
-    }
-
-    // retrieve core number of execution
-    corenum_0 = get_core_num() ;
-
-    return true;
 }
 
 void core1_entry() {
 
-    // create an alarm pool on core 1
-    alarm_pool_t *core1pool ;
-    core1pool = alarm_pool_create(2, 16) ;
-
-    // Create a repeating timer that calls repeating_timer_callback.
-    struct repeating_timer timer_core_1;
-
-    // Negative delay so means we will call repeating_timer_callback, and call it
-    // again 25us (40kHz) later regardless of how long the callback took to execute
-    alarm_pool_add_repeating_timer_us(core1pool, -25, 
-        repeating_timer_callback_core_1, NULL, &timer_core_1);
+    // Enable the interrupt for the alarm (we're using Alarm 1)
+    hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM_1) ;
+    // Associate an interrupt handler with the ALARM_IRQ
+    irq_set_exclusive_handler(ALARM_IRQ_1, alarm_irq_1) ;
+    // Enable the alarm interrupt
+    irq_set_enabled(ALARM_IRQ_1, true) ;
+    // Write the lower 32 bits of the target time to the alarm register, arming it.
+    timer_hw->alarm[ALARM_NUM_1] = timer_hw->timerawl + DELAY ;
 
     while (1) {
 
@@ -259,6 +308,14 @@ int main() {
     gpio_set_dir(LDAC, GPIO_OUT) ;
     gpio_put(LDAC, 0) ;
 
+    // Setup the ISR-timing GPIO
+    gpio_init(ISR_0) ;
+    gpio_set_dir(ISR_0, GPIO_OUT);
+    gpio_put(ISR_0, 0) ;
+    gpio_init(ISR_1) ;
+    gpio_set_dir(ISR_1, GPIO_OUT);
+    gpio_put(ISR_1, 0) ;
+
     // set up increments for calculating bow envelope
     attack_inc = divfix(max_amplitude, int2fix15(ATTACK_TIME)) ;//max_amplitude/(float)ATTACK_TIME ;
     decay_inc =  divfix(max_amplitude, int2fix15(DECAY_TIME)) ;//max_amplitude/(float)DECAY_TIME ;
@@ -280,14 +337,14 @@ int main() {
     // Desyncrhonize the beeps
     sleep_ms(500) ;
 
-    // Create a repeating timer that calls 
-    // repeating_timer_callback (defaults core 0)
-    struct repeating_timer timer_core_0;
-
-    // Negative delay so means we will call repeating_timer_callback, and call it
-    // again 25us (40kHz) later regardless of how long the callback took to execute
-    add_repeating_timer_us(-25, 
-        repeating_timer_callback_core_0, NULL, &timer_core_0);
+     // Enable the interrupt for the alarm (we're using Alarm 1)
+    hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM_0) ;
+    // Associate an interrupt handler with the ALARM_IRQ
+    irq_set_exclusive_handler(ALARM_IRQ_0, alarm_irq_0) ;
+    // Enable the alarm interrupt
+    irq_set_enabled(ALARM_IRQ_0, true) ;
+    // Write the lower 32 bits of the target time to the alarm register, arming it.
+    timer_hw->alarm[ALARM_NUM_0] = timer_hw->timerawl + DELAY ;
 
 
     while(1) {
@@ -307,6 +364,7 @@ int main() {
         // one locks the spinlock again (experimentation shows that
         // this is necessary)
         sleep_ms(1);
+
     }
     return 0 ;
 }
