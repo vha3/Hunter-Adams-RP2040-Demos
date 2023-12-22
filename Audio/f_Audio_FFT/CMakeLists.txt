@@ -6,7 +6,7 @@ pico_generate_pio_header(fft_incremental ${CMAKE_CURRENT_LIST_DIR}/vsync.pio)
 pico_generate_pio_header(fft_incremental ${CMAKE_CURRENT_LIST_DIR}/rgb.pio)
 
 # must match with executable name and source file names
-target_sources(fft_incremental PRIVATE fft.c vga_graphics.c)
+target_sources(fft_incremental PRIVATE fft.c vga16_graphics.c)
 
 # must match with executable name
 target_link_libraries(fft_incremental PRIVATE pico_stdlib pico_multicore pico_bootsel_via_double_reset hardware_pio hardware_dma hardware_adc hardware_irq)

@@ -1,22 +1,16 @@
 /**
  *  V. Hunter Adams (vha3@cornell.edu)
  
-    This is an experiment with the multicore capabilities on the
-    RP2040. The program instantiates a timer interrupt on each core.
-    Each of these timer interrupts writes to a separate channel
-    of the SPI DAC and does DDS of two sine waves of two different
-    frequencies. These sine waves are amplitude-modulated to "beeps."
+    A timer interrupt on core 0 generates a 400Hz beep
+    thru an SPI DAC, once per second. A single protothread
+    blinks the LED.
 
-    No spinlock is required to mediate the SPI writes because of the
-    SPI buffer on the RP2040. Spinlocks are used in the main program
-    running on each core to lock the other out from an incrementing
-    global variable. These are "under the hood" of the PT_SEM_SAFE_x
-    macros. Two threads ping-pong using these semaphores.
-
-    Note that globals are visible from both cores. Note also that GPIO
-    pin mappings performed on core 0 can be utilized from core 1.
-    Creation of an alarm pool is required to force a timer interrupt to
-    take place on core 1 rather than core 0.
+    GPIO 5 (pin 7) Chip select
+    GPIO 6 (pin 9) SCK/spi0_sclk
+    GPIO 7 (pin 10) MOSI/spi0_tx
+    GPIO 2 (pin 4) GPIO output for timing ISR
+    3.3v (pin 36) -> VCC on DAC 
+    GND (pin 3)  -> GND on DAC 
 
  */
 
@@ -25,11 +19,14 @@
 #include <math.h>
 #include <string.h>
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
 #include "hardware/spi.h"
 #include "hardware/sync.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1.h"
+#include "pt_cornell_rp2040_v1_3.h"
+
+// Low-level alarm infrastructure we'll be using
+#define ALARM_NUM 0
+#define ALARM_IRQ TIMER_IRQ_0
 
 // Macros for fixed-point arithmetic (faster than floating point)
 typedef signed int fix15 ;
@@ -44,7 +41,8 @@ typedef signed int fix15 ;
 
 //Direct Digital Synthesis (DDS) parameters
 #define two32 4294967296.0  // 2^32 (a constant)
-#define Fs 40000            // sample rate
+#define Fs 50000
+#define DELAY 20 // 1/Fs (in microseconds)
 
 // the DDS units - core 0
 // Phase accumulator and phase increment. Increment sets output frequency.
@@ -67,11 +65,11 @@ fix15 current_amplitude_0 = 0 ;         // current amplitude (modified in ISR)
 fix15 current_amplitude_1 = 0 ;         // current amplitude (modified in ISR)
 
 // Timing parameters for beeps (units of interrupts)
-#define ATTACK_TIME             200
-#define DECAY_TIME              200
+#define ATTACK_TIME             250
+#define DECAY_TIME              250
 #define SUSTAIN_TIME            10000
-#define BEEP_DURATION           10400
-#define BEEP_REPEAT_INTERVAL    40000
+#define BEEP_DURATION           10500
+#define BEEP_REPEAT_INTERVAL    50000
 
 // State machine variables
 volatile unsigned int STATE_0 = 0 ;
@@ -96,15 +94,20 @@ uint16_t DAC_data_0 ; // output value
 #define LED      25
 #define SPI_PORT spi0
 
-// Two variables to store core number
-volatile int corenum_0  ;
-
-// Global counter for spinlock experimenting
-volatile int global_counter = 0 ;
-
+//GPIO for timing the ISR
+#define ISR_GPIO 2
 
 // This timer ISR is called on core 0
-bool repeating_timer_callback_core_0(struct repeating_timer *t) {
+static void alarm_irq(void) {
+
+    // Assert a GPIO when we enter the interrupt
+    gpio_put(ISR_GPIO, 1) ;
+
+    // Clear the alarm irq
+    hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM);
+
+    // Reset the alarm register
+    timer_hw->alarm[ALARM_NUM] = timer_hw->timerawl + DELAY ;
 
     if (STATE_0 == 0) {
         // DDS phase and sine table lookup
@@ -147,10 +150,9 @@ bool repeating_timer_callback_core_0(struct repeating_timer *t) {
         }
     }
 
-    // retrieve core number of execution
-    corenum_0 = get_core_num() ;
+    // De-assert the GPIO when we leave the interrupt
+    gpio_put(ISR_GPIO, 0) ;
 
-    return true;
 }
 
 
@@ -163,6 +165,7 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
         
         // Toggle on LED
         gpio_put(LED, !gpio_get(LED)) ;
+
         // Yield for 500 ms
         PT_YIELD_usec(500000) ;
     }
@@ -194,6 +197,11 @@ int main() {
     gpio_set_dir(LDAC, GPIO_OUT) ;
     gpio_put(LDAC, 0) ;
 
+    // Setup the ISR-timing GPIO
+    gpio_init(ISR_GPIO) ;
+    gpio_set_dir(ISR_GPIO, GPIO_OUT);
+    gpio_put(ISR_GPIO, 0) ;
+
     // Map LED to GPIO port, make it low
     gpio_init(LED) ;
     gpio_set_dir(LED, GPIO_OUT) ;
@@ -210,14 +218,14 @@ int main() {
          sin_table[ii] = float2fix15(2047*sin((float)ii*6.283/(float)sine_table_size));
     }
 
-    // Create a repeating timer that calls 
-    // repeating_timer_callback (defaults core 0)
-    struct repeating_timer timer_core_0;
-
-    // Negative delay so means we will call repeating_timer_callback, and call it
-    // again 25us (40kHz) later regardless of how long the callback took to execute
-    add_repeating_timer_us(-25, 
-        repeating_timer_callback_core_0, NULL, &timer_core_0);
+    // Enable the interrupt for the alarm (we're using Alarm 0)
+    hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM) ;
+    // Associate an interrupt handler with the ALARM_IRQ
+    irq_set_exclusive_handler(ALARM_IRQ, alarm_irq) ;
+    // Enable the alarm interrupt
+    irq_set_enabled(ALARM_IRQ, true) ;
+    // Write the lower 32 bits of the target time to the alarm register, arming it.
+    timer_hw->alarm[ALARM_NUM] = timer_hw->timerawl + DELAY ;
 
     // Add core 0 threads
     pt_add_thread(protothread_core_0) ;

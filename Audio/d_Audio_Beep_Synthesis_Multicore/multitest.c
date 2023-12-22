@@ -28,8 +28,9 @@
 #include "pico/multicore.h"
 #include "hardware/sync.h"
 #include "hardware/spi.h"
+#include "hardware/timer.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1.h"
+#include "pt_cornell_rp2040_v1_3.h"
 
 // Macros for fixed-point arithmetic (faster than floating point)
 typedef signed int fix15 ;
@@ -42,9 +43,16 @@ typedef signed int fix15 ;
 #define char2fix15(a) (fix15)(((fix15)(a)) << 15)
 #define divfix(a,b) (fix15)( (((signed long long)(a)) << 15) / (b))
 
-//Direct Digital Synthesis (DDS) parameters
-#define two32 4294967296.0  // 2^32 (a constant)
-#define Fs 40000            // sample rate
+// Alarm infrastructure that we'll be using
+#define ALARM_NUM_0 0
+#define ALARM_NUM_1 1
+#define ALARM_IRQ_0 TIMER_IRQ_0
+#define ALARM_IRQ_1 TIMER_IRQ_1
+
+//DDS parameters
+#define two32 4294967296.0 // 2^32 
+#define Fs 50000
+#define DELAY 20 // 1/Fs (in microseconds)
 
 // the DDS units - core 1
 // Phase accumulator and phase increment. Increment sets output frequency.
@@ -71,11 +79,11 @@ fix15 current_amplitude_0 = 0 ;         // current amplitude (modified in ISR)
 fix15 current_amplitude_1 = 0 ;         // current amplitude (modified in ISR)
 
 // Timing parameters for beeps (units of interrupts)
-#define ATTACK_TIME             200
-#define DECAY_TIME              200
+#define ATTACK_TIME             250
+#define DECAY_TIME              250
 #define SUSTAIN_TIME            10000
-#define BEEP_DURATION           10400
-#define BEEP_REPEAT_INTERVAL    40000
+#define BEEP_DURATION           10500
+#define BEEP_REPEAT_INTERVAL    50000
 
 // State machine variables
 volatile unsigned int STATE_0 = 0 ;
@@ -102,6 +110,10 @@ uint16_t DAC_data_0 ; // output value
 #define LED      25
 #define SPI_PORT spi0
 
+// GPIO's for ISR timing
+#define ISR_0 2
+#define ISR_1 3
+
 // Two variables to store core number
 volatile int corenum_0  ;
 volatile int corenum_1  ;
@@ -114,7 +126,18 @@ struct pt_sem core_1_go, core_0_go ;
 
 
 // This timer ISR is called on core 1
-bool repeating_timer_callback_core_1(struct repeating_timer *t) {
+static void alarm_irq_1(void) {
+
+
+    // Assert GPIO for timing interrupt
+    gpio_put(ISR_1, 1) ;
+
+    // Clear the alarm irq
+    hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM_1);
+
+    // Reset the alarm register
+    timer_hw->alarm[ALARM_NUM_1] = timer_hw->timerawl + DELAY ;
+
 
     if (STATE_1 == 0) {
         // DDS phase and sine table lookup
@@ -160,11 +183,19 @@ bool repeating_timer_callback_core_1(struct repeating_timer *t) {
     // retrieve core number of execution
     corenum_1 = get_core_num() ;
 
-    return true;
 }
 
 // This timer ISR is called on core 0
-bool repeating_timer_callback_core_0(struct repeating_timer *t) {
+static void alarm_irq_0(void) {
+
+    // Assert GPIO for timing interrupt
+    gpio_put(ISR_0, 1) ;
+
+    // Clear the alarm irq
+    hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM_0);
+
+    // Reset the alarm register
+    timer_hw->alarm[ALARM_NUM_0] = timer_hw->timerawl + DELAY ;
 
     if (STATE_0 == 0) {
         // DDS phase and sine table lookup
@@ -210,7 +241,6 @@ bool repeating_timer_callback_core_0(struct repeating_timer *t) {
     // retrieve core number of execution
     corenum_0 = get_core_num() ;
 
-    return true;
 }
 
 // This thread runs on core 1
@@ -265,17 +295,14 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
 // This is the core 1 entry point. Essentially main() for core 1
 void core1_entry() {
 
-    // create an alarm pool on core 1
-    alarm_pool_t *core1pool ;
-    core1pool = alarm_pool_create(2, 16) ;
-
-    // Create a repeating timer that calls repeating_timer_callback.
-    struct repeating_timer timer_core_1;
-
-    // Negative delay so means we will call repeating_timer_callback, and call it
-    // again 25us (40kHz) later regardless of how long the callback took to execute
-    alarm_pool_add_repeating_timer_us(core1pool, -25, 
-        repeating_timer_callback_core_1, NULL, &timer_core_1);
+    // Enable the interrupt for the alarm (we're using Alarm 1)
+    hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM_1) ;
+    // Associate an interrupt handler with the ALARM_IRQ
+    irq_set_exclusive_handler(ALARM_IRQ_1, alarm_irq_1) ;
+    // Enable the alarm interrupt
+    irq_set_enabled(ALARM_IRQ_1, true) ;
+    // Write the lower 32 bits of the target time to the alarm register, arming it.
+    timer_hw->alarm[ALARM_NUM_1] = timer_hw->timerawl + DELAY ;
 
     // Add thread to core 1
     pt_add_thread(protothread_core_1) ;
@@ -334,14 +361,15 @@ int main() {
     // Desynchronize the beeps
     sleep_ms(500) ;
 
-    // Create a repeating timer that calls 
-    // repeating_timer_callback (defaults core 0)
-    struct repeating_timer timer_core_0;
-
-    // Negative delay so means we will call repeating_timer_callback, and call it
-    // again 25us (40kHz) later regardless of how long the callback took to execute
-    add_repeating_timer_us(-25, 
-        repeating_timer_callback_core_0, NULL, &timer_core_0);
+    
+     // Enable the interrupt for the alarm (we're using Alarm 1)
+    hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM_0) ;
+    // Associate an interrupt handler with the ALARM_IRQ
+    irq_set_exclusive_handler(ALARM_IRQ_0, alarm_irq_0) ;
+    // Enable the alarm interrupt
+    irq_set_enabled(ALARM_IRQ_0, true) ;
+    // Write the lower 32 bits of the target time to the alarm register, arming it.
+    timer_hw->alarm[ALARM_NUM_0] = timer_hw->timerawl + DELAY ;
 
     // Add core 0 threads
     pt_add_thread(protothread_core_0) ;

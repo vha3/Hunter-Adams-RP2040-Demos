@@ -176,20 +176,20 @@ typedef void * lc_t;
 
 #define LC_INIT(s) s = NULL
 
-#define LC_RESUME(s)        \
-  do {            \
-    if(s != NULL) {       \
-      goto *s;          \
-    }           \
+#define LC_RESUME(s)				\
+  do {						\
+    if(s != NULL) {				\
+      goto *s;					\
+    }						\
   } while(0)
 
 #define LC_CONCAT2(s1, s2) s1##s2
 #define LC_CONCAT(s1, s2) LC_CONCAT2(s1, s2)
 
-#define LC_SET(s)       \
-  do {            \
-    LC_CONCAT(LC_LABEL, __LINE__):            \
-    (s) = &&LC_CONCAT(LC_LABEL, __LINE__);  \
+#define LC_SET(s)				\
+  do {						\
+    LC_CONCAT(LC_LABEL, __LINE__):   	        \
+    (s) = &&LC_CONCAT(LC_LABEL, __LINE__);	\
   } while(0)
 
 #define LC_END(s)
@@ -291,12 +291,12 @@ struct pt {
  *
  * \hideinitializer
  */
-#define PT_WAIT_UNTIL(pt, condition)          \
-  do {            \
-    LC_SET((pt)->lc);       \
-    if(!(condition)) {        \
-      return PT_WAITING;      \
-    }           \
+#define PT_WAIT_UNTIL(pt, condition)	        \
+  do {						\
+    LC_SET((pt)->lc);				\
+    if(!(condition)) {				\
+      return PT_WAITING;			\
+    }						\
   } while(0)
 
 /**
@@ -349,10 +349,10 @@ struct pt {
  *
  * \hideinitializer
  */
-#define PT_SPAWN(pt, child, thread)   \
-  do {            \
-    PT_INIT((child));       \
-    PT_WAIT_THREAD((pt), (thread));   \
+#define PT_SPAWN(pt, child, thread)		\
+  do {						\
+    PT_INIT((child));				\
+    PT_WAIT_THREAD((pt), (thread));		\
   } while(0)
 
 /** @} */
@@ -372,10 +372,10 @@ struct pt {
  *
  * \hideinitializer
  */
-#define PT_RESTART(pt)        \
-  do {            \
-    PT_INIT(pt);        \
-    return PT_WAITING;      \
+#define PT_RESTART(pt)				\
+  do {						\
+    PT_INIT(pt);				\
+    return PT_WAITING;			\
   } while(0)
 
 /**
@@ -389,10 +389,10 @@ struct pt {
  *
  * \hideinitializer
  */
-#define PT_EXIT(pt)       \
-  do {            \
-    PT_INIT(pt);        \
-    return PT_EXITED;     \
+#define PT_EXIT(pt)				\
+  do {						\
+    PT_INIT(pt);				\
+    return PT_EXITED;			\
   } while(0)
 
 /** @} */
@@ -434,13 +434,23 @@ struct pt {
  *
  * \hideinitializer
  */
-#define PT_YIELD(pt)        \
-  do {            \
-    PT_YIELD_FLAG = 0;        \
-    LC_SET((pt)->lc);       \
-    if(PT_YIELD_FLAG == 0) {      \
-      return PT_YIELDED;      \
-    }           \
+// modified 9/26/23 for priority scheduler
+// this will be set to zero by the scheduler,
+// and set to one, if a thread actually executes
+int pt_executed, pt_executed1 ;
+//
+#define PT_YIELD(pt)				\
+  do {						\
+    PT_YIELD_FLAG = 0;				\
+    LC_SET((pt)->lc);				\
+    if(PT_YIELD_FLAG == 0) {			\
+      return PT_YIELDED;			\
+    }	 \
+    if(get_core_num()==1){ \
+    pt_executed1 = 1;;\
+    }  else {\
+      pt_executed = 1;\
+    }\
   } while(0)
 
 /**
@@ -455,14 +465,21 @@ struct pt {
  * \hideinitializer
  */
 
-#define PT_YIELD_UNTIL(pt, cond)    \
-  do {            \
-    PT_YIELD_FLAG = 0;        \
-    LC_SET((pt)->lc);       \
-    if((PT_YIELD_FLAG == 0) || !(cond)) { \
-      return PT_YIELDED;                        \
-    }           \
+#define PT_YIELD_UNTIL(pt, cond)		\
+  do {						\
+    PT_YIELD_FLAG = 0;				\
+    LC_SET((pt)->lc);				\
+    if((PT_YIELD_FLAG == 0) || !(cond)) {	\
+      return PT_YIELDED;                  \
+    }	\
+    if(get_core_num()==1){ \
+    pt_executed1 = 1;\
+    }  else {\
+      pt_executed = 1;\
+    }\
   } while(0)
+
+  /**/
 
 /** @} */
 
@@ -512,10 +529,10 @@ struct pt_sem {
  *
  * \hideinitializer
  */
-#define PT_SEM_WAIT(pt, s)  \
-  do {            \
-    PT_YIELD_UNTIL(pt, (s)->count > 0);   \
-    --(s)->count;       \
+#define PT_SEM_WAIT(pt, s)	\
+  do {						\
+    PT_YIELD_UNTIL(pt, (s)->count > 0);		\
+    --(s)->count;				\
   } while(0)
 
 /**
@@ -540,26 +557,28 @@ struct pt_sem {
 //=====================================================================
 //=== BRL4 additions for rp2040 =======================================
 //=====================================================================
-
+// NOTE: modifed from version 1.1.1 !!!! for 64 bits
 // macro to make a thread execution pause in usec
-// max time of about one hour
+// max time of about 300,000 years
+// uint64_t time_us_64 (void)
+
 #define PT_YIELD_usec(delay_time)  \
-    do { static unsigned int time_thread ;\
-    time_thread = timer_hw->timerawl + (unsigned int)delay_time ; \
-    PT_YIELD_UNTIL(pt, (timer_hw->timerawl >= time_thread)); \
+    do { static uint64_t time_thread ;\
+    time_thread = time_us_64() + (uint64_t)delay_time ; \
+    PT_YIELD_UNTIL(pt, (time_us_64() >= time_thread)); \
     } while(0);
 
 // macro to return system time
-#define PT_GET_TIME_usec() (timer_hw->timerawl)
+#define PT_GET_TIME_usec() (time_us_64())
 
 // macros for interval yield
 // attempts to make interval equal to specified value
-#define PT_INTERVAL_INIT() static unsigned int pt_interval_marker
+#define PT_INTERVAL_INIT() static uint64_t pt_interval_marker
 //
 #define PT_YIELD_INTERVAL(interval_time)  \
     do { \
-    PT_YIELD_UNTIL(pt, (timer_hw->timerawl >= pt_interval_marker)); \
-    pt_interval_marker = timer_hw->timerawl + (unsigned int)interval_time; \
+    PT_YIELD_UNTIL(pt, (uint32_t)(time_us_64() >= pt_interval_marker)); \
+    pt_interval_marker = time_us_64() + (uint64_t)interval_time; \
     } while(0);
 //
 // =================================================================
@@ -578,16 +597,21 @@ spin_lock_t * sem_lock ;
   spin_unlock_unsafe (sem_lock); \
 } while(0)
 
-#define PT_SEM_SAFE_WAIT(pt,s)  do {  \
-    spin_lock_unsafe_blocking (sem_lock);   \
-    PT_YIELD_FLAG = 0;      \
-    LC_SET((pt)->lc);       \
-    if((PT_YIELD_FLAG == 0) || !((s)->count > 0)) { \
-      spin_unlock_unsafe (sem_lock);  \
+#define PT_SEM_SAFE_WAIT(pt,s)	do {	\
+    spin_lock_unsafe_blocking (sem_lock); 	\
+    PT_YIELD_FLAG = 0;			\
+    LC_SET((pt)->lc);				\
+    if((PT_YIELD_FLAG == 0) || !((s)->count > 0)) {	\
+      spin_unlock_unsafe (sem_lock); 	\
       return PT_YIELDED;      \
-    }   \
-    --(s)->count; \
-    spin_unlock_unsafe (sem_lock);  \
+    }		\
+   if(get_core_num()==1){ \
+    pt_executed1 = 1;;\
+    }  else {\
+      pt_executed = 1;\
+    }\
+    --(s)->count;	\
+    spin_unlock_unsafe (sem_lock); 	\
   } while(0)
 
 #define PT_SEM_SAFE_SIGNAL(pt,s) do{ \
@@ -616,14 +640,19 @@ spin_lock_t * lock_lock ;
   spin_unlock_unsafe (lock_lock) ; \
 } while(0)
 
-#define PT_LOCK_WAIT(pt,s)  do {  \
+#define PT_LOCK_WAIT(pt,s)	do {	\
   spin_lock_unsafe_blocking (lock_lock); \
-  PT_YIELD_FLAG = 0;        \
-  LC_SET((pt)->lc);       \
-  if((PT_YIELD_FLAG == 0) || !(is_spin_locked(s)==false)) { \
+  PT_YIELD_FLAG = 0;				\
+  LC_SET((pt)->lc);				\
+  if((PT_YIELD_FLAG == 0) || !(is_spin_locked(s)==false)) {	\
       spin_unlock_unsafe (lock_lock) ; \
       return PT_YIELDED;                        \
-  }           \
+  }						\
+  if(get_core_num()==1){ \
+    pt_executed1 = 1;;\
+    }  else {\
+      pt_executed = 1;\
+    }\
   spin_lock_unsafe_blocking (s); \
   spin_unlock_unsafe (lock_lock) ; \
 } while(0)
@@ -667,9 +696,9 @@ int pt_task_count1 = 0 ;
 
 // The task structure
 struct ptx {
-  struct pt pt;              // thread context
-  int num;                    // thread number
-  char (*pf)(struct pt *pt); // pointer to thread function
+	struct pt pt;              // thread context
+	int num;                    // thread number
+	char (*pf)(struct pt *pt); // pointer to thread function
 };
 
 // === extended structure for scheduler ===============
@@ -684,41 +713,41 @@ static struct ptx pt_thread_list1[MAX_THREADS];
 // add an entry to the thread list
 //struct ptx *pt_add( char (*pf)(struct pt *pt), int rate) {
 int pt_add( char (*pf)(struct pt *pt)) {
-  if (pt_task_count < (MAX_THREADS)) {
+	if (pt_task_count < (MAX_THREADS)) {
         // get the current thread table entry 
-    struct ptx *ptx = &pt_thread_list[pt_task_count];
+		struct ptx *ptx = &pt_thread_list[pt_task_count];
         // enter the tak data into the thread table
-    ptx->num   = pt_task_count;
+		ptx->num   = pt_task_count;
         // function pointer
-    ptx->pf    = pf;
+		ptx->pf    = pf;
     //
-    PT_INIT( &ptx->pt );
+		PT_INIT( &ptx->pt );
         // count of number of defined threads
-    pt_task_count++;
+		pt_task_count++;
         // return current entry
         return pt_task_count-1;
-  }
-  return 0;
+	}
+	return 0;
 }
 
 // core 1 -- add an entry to the thread list
 //struct ptx *pt_add( char (*pf)(struct pt *pt), int rate) {
 int pt_add1( char (*pf)(struct pt *pt)) {
-  if (pt_task_count1 < (MAX_THREADS)) {
+	if (pt_task_count1 < (MAX_THREADS)) {
         // get the current thread table entry 
-    struct ptx *ptx = &pt_thread_list1[pt_task_count1];
+		struct ptx *ptx = &pt_thread_list1[pt_task_count1];
         // enter the tak data into the thread table
-    ptx->num   = pt_task_count1;
+		ptx->num   = pt_task_count1;
         // function pointer
-    ptx->pf    = pf;
+		ptx->pf    = pf;
     //
-    PT_INIT( &ptx->pt );
+		PT_INIT( &ptx->pt );
         // count of number of defined threads
-    pt_task_count1++;
+		pt_task_count1++;
         // return current entry
         return pt_task_count1-1;
-  }
-  return 0;
+	}
+	return 0;
 }
 
 /* Scheduler
@@ -750,8 +779,19 @@ SOFTWARE.
 
 // choose schedule method
 #define SCHED_ROUND_ROBIN 0
-#define SCHED_RATE 1
+#define SCHED_PRIORITY    1
+// default is round robin
 int pt_sched_method = SCHED_ROUND_ROBIN ;
+
+// =========================================
+// If defined, accumulates execution stats, 
+//    but slows down scheduler!!
+#define sched_stats
+int sched_thread_stats[MAX_THREADS], sched_thread_stats1[MAX_THREADS] ;
+uint64_t sched_thread_time[MAX_THREADS], thread_time ;
+uint64_t sched_thread_time1[MAX_THREADS], thread_time1 ;
+int sched_count, sched_count1 ;
+// =========================================
 
 static PT_THREAD (protothread_sched(struct pt *pt))
 {   
@@ -773,8 +813,41 @@ static PT_THREAD (protothread_sched(struct pt *pt))
           // Never yields! 
           // NEVER exit while!
         } // END WHILE(1)
-    } //end if (pt_sched_method==RR)       
-     
+    } //end if (pt_sched_method==RR)     
+    //  
+    if (pt_sched_method==SCHED_PRIORITY){
+        while(1) {
+          // test stupid round-robin 
+          // on all defined threads
+          struct ptx *ptx = &pt_thread_list[0];
+
+          #ifdef sched_stats
+           sched_count++ ;
+          #endif
+
+          // step thru all defined threads
+          // -- loop can have more than one initialization or increment/decrement, 
+          // -- separated using comma operator. But it can have only one condition.
+          for (i=0; i<pt_task_count; i++, ptx++ ){
+              // zero execute flag
+              pt_executed = 0;
+              thread_time = time_us_64();
+              // call thread function
+              (pt_thread_list[i].pf)(&ptx->pt); 
+              // if there was execution, then restart execution list
+              if (pt_executed==1){
+                #ifdef sched_stats
+                  sched_thread_stats[i]++ ;
+                  sched_thread_time[i] += (time_us_64()-thread_time);
+                #endif
+                break ;
+              }
+          }
+          // Never yields! 
+          // NEVER exit while!
+        } // END WHILE(1)
+    } //end if (pt_sched_method==priority) 
+    
     PT_END(pt);
 } // scheduler thread
 
@@ -801,7 +874,40 @@ static PT_THREAD (protothread_sched1(struct pt *pt))
           // Never yields! 
           // NEVER exit while!
         } // END WHILE(1)
-    } // end if(pt_sched_method==SCHED_ROUND_ROBIN)      
+    } // end if(pt_sched_method==SCHED_ROUND_ROBIN)    
+    //
+    if (pt_sched_method==SCHED_PRIORITY){
+        while(1) {
+          // test stupid round-robin 
+          // on all defined threads
+          struct ptx *ptx = &pt_thread_list1[0];
+
+          #ifdef sched_stats
+           sched_count1++ ;
+          #endif
+
+          // step thru all defined threads
+          // -- loop can have more than one initialization or increment/decrement, 
+          // -- separated using comma operator. But it can have only one condition.
+          for (i=0; i<pt_task_count1; i++, ptx++ ){
+              // zero execute flag
+              pt_executed1 = 0;
+              thread_time1 = time_us_64();
+              // call thread function
+              (pt_thread_list1[i].pf)(&ptx->pt); 
+              // if there was execution, then restart execution list
+              if (pt_executed1==1){
+                #ifdef sched_stats
+                  sched_thread_stats1[i]++ ;
+                  sched_thread_time1[i] += (time_us_64()-thread_time1);
+                #endif
+                break ;
+              }
+          }
+          // Never yields! 
+          // NEVER exit while!
+        } // END WHILE(1)
+    } //end if (pt_sched_method==priority)   
      
     PT_END(pt);
 } // scheduler1 thread

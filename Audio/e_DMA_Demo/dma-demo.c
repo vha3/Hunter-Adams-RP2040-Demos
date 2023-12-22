@@ -70,8 +70,8 @@ int main() {
     }
 
     // Select DMA channels
-    int data_chan = 0;
-    int ctrl_chan = 1;
+    int data_chan = dma_claim_unused_channel(true);;
+    int ctrl_chan = dma_claim_unused_channel(true);;
 
     // Setup the control channel
     dma_channel_config c = dma_channel_get_default_config(ctrl_chan);   // default configs

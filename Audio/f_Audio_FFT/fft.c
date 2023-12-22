@@ -9,9 +9,10 @@
  * HARDWARE CONNECTIONS
  *  - GPIO 16 ---> VGA Hsync
  *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 330 ohm resistor ---> VGA Red
+ *  - GPIO 18 ---> 470 ohm resistor ---> VGA Green 
  *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
  *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
+ *  - GPIO 21 ---> 330 ohm resistor ---> VGA Red
  *  - RP2040 GND ---> VGA GND
  *  - GPIO 26 ---> Audio input [0-3.3V]
  *
@@ -24,7 +25,7 @@
  */
 
 // Include VGA graphics library
-#include "vga_graphics.h"
+#include "vga16_graphics.h"
 // Include standard libraries
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@
 #include "hardware/adc.h"
 #include "hardware/irq.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1.h"
+#include "pt_cornell_rp2040_v1_3.h"
 
 // Define the LED pin
 #define LED     25
@@ -71,9 +72,9 @@ typedef signed int fix15 ;
 // ADC clock rate (unmutable!)
 #define ADCCLK 48000000.0
 
-// DMA channels for sampling ADC (VGA driver uses 0 and 1)
-int sample_chan = 2 ;
-int control_chan = 3 ;
+// DMA channels for sampling ADC
+int sample_chan ;
+int control_chan ;
 
 // Max and min macros
 #define max(a,b) ((a>b)?a:b)
@@ -352,6 +353,9 @@ int main() {
     /////////////////////////////////////////////////////////////////////////////////
     // ============================== ADC DMA CONFIGURATION =========================
     /////////////////////////////////////////////////////////////////////////////////
+
+    sample_chan = dma_claim_unused_channel(true);
+    control_chan = dma_claim_unused_channel(true);
 
     // Channel configurations
     dma_channel_config c2 = dma_channel_get_default_config(sample_chan);
