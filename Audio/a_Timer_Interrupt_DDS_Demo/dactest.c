@@ -10,6 +10,7 @@
    GPIO 5 (pin 7) Chip select
    GPIO 6 (pin 9) SCK/spi0_sclk
    GPIO 7 (pin 10) MOSI/spi0_tx
+   GPIO 2 (pin 4) GPIO output for timing ISR
    3.3v (pin 36) -> VCC on DAC 
    GND (pin 3)  -> GND on DAC 
  */
@@ -17,11 +18,18 @@
 #include <stdio.h>
 #include <math.h>
 #include "pico/stdlib.h"
+#include "hardware/timer.h"
+#include "hardware/irq.h"
 #include "hardware/spi.h"
+
+// Low-level alarm infrastructure we'll be using
+#define ALARM_NUM 0
+#define ALARM_IRQ TIMER_IRQ_0
 
 //DDS parameters
 #define two32 4294967296.0 // 2^32 
-#define Fs 40000
+#define Fs 50000
+#define DELAY 20 // 1/Fs (in microseconds)
 // the DDS units:
 volatile unsigned int phase_accum_main;
 volatile unsigned int phase_incr_main = (800.0*two32)/Fs ;//
@@ -42,19 +50,35 @@ uint16_t DAC_data ; // output value
 #define PIN_MOSI 7
 #define SPI_PORT spi0
 
+//GPIO for timing the ISR
+#define ISR_GPIO 2
+
 // DDS sine table
 #define sine_table_size 256
 volatile int sin_table[sine_table_size] ;
 
-// Timer ISR
-bool repeating_timer_callback(struct repeating_timer *t) {
+// Alarm ISR
+static void alarm_irq(void) {
+
+    // Assert a GPIO when we enter the interrupt
+    gpio_put(ISR_GPIO, 1) ;
+
+    // Clear the alarm irq
+    hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM);
+
+    // Reset the alarm register
+    timer_hw->alarm[ALARM_NUM] = timer_hw->timerawl + DELAY ;
+
 	// DDS phase and sine table lookup
 	phase_accum_main += phase_incr_main  ;
     DAC_data = (DAC_config_chan_A | ((sin_table[phase_accum_main>>24] + 2048) & 0xffff))  ;
 
+    // Perform an SPI transaction
     spi_write16_blocking(SPI_PORT, &DAC_data, 1) ;
 
-    return true;
+    // De-assert the GPIO when we leave the interrupt
+    gpio_put(ISR_GPIO, 0) ;
+
 }
 
 int main() {
@@ -66,6 +90,11 @@ int main() {
     spi_init(SPI_PORT, 20000000) ;
     // Format (channel, data bits per transfer, polarity, phase, order)
     spi_set_format(SPI_PORT, 16, 0, 0, 0);
+
+    // Setup the ISR-timing GPIO
+    gpio_init(ISR_GPIO) ;
+    gpio_set_dir(ISR_GPIO, GPIO_OUT);
+    gpio_put(ISR_GPIO, 0) ;
 
     // Map SPI signals to GPIO ports
     gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
@@ -80,15 +109,16 @@ int main() {
          sin_table[ii] = (int)(2047*sin((float)ii*6.283/(float)sine_table_size));
     }
 
-    // Create a repeating timer that calls repeating_timer_callback.
-    // If the delay is > 0 then this is the delay between the previous callback ending and the next starting.
-    // If the delay is negative (see below) then the next call to the callback will be exactly x us after the
-    // start of the call to the last callback
-    struct repeating_timer timer;
+    // Enable the interrupt for the alarm (we're using Alarm 0)
+    hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM) ;
+    // Associate an interrupt handler with the ALARM_IRQ
+    irq_set_exclusive_handler(ALARM_IRQ, alarm_irq) ;
+    // Enable the alarm interrupt
+    irq_set_enabled(ALARM_IRQ, true) ;
+    // Write the lower 32 bits of the target time to the alarm register, arming it.
+    timer_hw->alarm[ALARM_NUM] = timer_hw->timerawl + DELAY ;
 
-    // Negative delay so means we will call repeating_timer_callback, and call it again
-    // 25us (40kHz) later regardless of how long the callback took to execute
-    add_repeating_timer_us(-25, repeating_timer_callback, NULL, &timer);
+    // Nothing happening here
     while(1){
     }
     return 0;
