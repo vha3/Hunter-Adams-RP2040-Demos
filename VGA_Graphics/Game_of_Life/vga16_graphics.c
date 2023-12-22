@@ -9,9 +9,10 @@
 #include "vsync.pio.h"
 #include "rgb.pio.h"
 // Header file
-#include "vga_graphics.h"
+#include "vga16_graphics.h"
 // Font file
 #include "glcdfont.c"
+#include "font_rom_brl4.h"
 
 // VGA timing constants
 #define H_ACTIVE   655    // (active + frontporch - 1) - one cycle delay for mov
@@ -29,8 +30,8 @@ unsigned char vga_data_array[TXCOUNT];
 char * address_pointer = &vga_data_array[0] ;
 
 // Bit masks for drawPixel routine
-#define TOPMASK 0b11000111
-#define BOTTOMMASK 0b11111000
+#define TOPMASK 0b00001111
+#define BOTTOMMASK 0b11110000
 
 // For drawLine
 #define swap(a, b) { short t = a; a = b; b = t; }
@@ -78,7 +79,7 @@ void initVGA() {
     // is consolidated in one place. Here in the C, we then just import and use it.
     hsync_program_init(pio, hsync_sm, hsync_offset, HSYNC);
     vsync_program_init(pio, vsync_sm, vsync_offset, VSYNC);
-    rgb_program_init(pio, rgb_sm, rgb_offset, RED_PIN);
+    rgb_program_init(pio, rgb_sm, rgb_offset, LO_GRN);
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,8 +87,8 @@ void initVGA() {
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // DMA channels - 0 sends color data, 1 reconfigures and restarts 0
-    int rgb_chan_0 = 0;
-    int rgb_chan_1 = 1;
+    int rgb_chan_0 = dma_claim_unused_channel(true);
+    int rgb_chan_1 = dma_claim_unused_channel(true);
 
     // Channel Zero (sends color data to PIO VGA machine)
     dma_channel_config c0 = dma_channel_get_default_config(rgb_chan_0);  // default configs
@@ -157,19 +158,48 @@ void drawPixel(short x, short y, char color) {
     if (x < 0) x = 0 ;
     if (y < 0) y = 0 ;
     if (y > 479) y = 479 ;
+    //if((x > 639) | (x < 0) | (y > 479) | (y < 0) ) return;
 
     // Which pixel is it?
     int pixel = ((640 * y) + x) ;
 
-    // Is this pixel stored in the first 3 bits
+    // Is this pixel stored in the first 4 bits
     // of the vga data array index, or the second
-    // 3 bits? Check, then mask.
+    // 4 bits? Check, then mask.
     if (pixel & 1) {
-        vga_data_array[pixel>>1] = (vga_data_array[pixel>>1] & TOPMASK) | (color << 3) ;
+        vga_data_array[pixel>>1] = (vga_data_array[pixel>>1] & TOPMASK) | (color << 4) ;
     }
     else {
         vga_data_array[pixel>>1] = (vga_data_array[pixel>>1] & BOTTOMMASK) | (color) ;
     }
+}
+
+// VGA routine to draw a cell
+void drawCell(short x, short y, char color) {
+
+    // Which pixel is it - upper left corner
+    int pixel = ((640 * (y<<1)) + (x<<1)) ;
+
+    vga_data_array[pixel>>1] = (color | (color<<3)) ;
+    vga_data_array[(pixel+640)>>1] = (color | (color<<3)) ;
+
+}
+
+// Check status of neighbors
+int checkNeighbors(short x, short y) {
+    int index = (((640 * (y<<1)) + (x<<1)))>>1 ;
+
+    return ((vga_data_array[index-320]&1) + (vga_data_array[index+640]&1) + 
+        (vga_data_array[index-1]&1) + (vga_data_array[index+1]&1) +
+        (vga_data_array[index-321]&1) + (vga_data_array[index-319]&1) +
+        (vga_data_array[index+641]&1) + (vga_data_array[index+639]&1));
+}
+
+// Check if alive
+int isAlive(short x, short y) {
+    int index = (((640 * (y<<1)) + (x<<1)))>>1 ;
+
+    return (vga_data_array[index]&1) ;
 }
 
 void drawVLine(short x, short y, short h, char color) {
@@ -551,4 +581,67 @@ inline void writeString(char* str){
     while (*str){
         tft_write(*str++);
     }
+}
+
+//=================================================
+// added 10/16/2023 brl4
+inline void setTextColorBig(char color, char background) {
+/* Set color of text to be displayed
+ * Parameters:
+ *      color = 16-bit color of text
+ *      b = 16-bit color of text background
+ *      background ==-1 means trasnparten background
+ */
+  textcolor   = color;
+  textbgcolor = background;
+}
+//=================================================
+// added 10/11/2023 brl4
+// Draw a character
+void drawCharBig(short x, short y, unsigned char c, char color, char bg) {
+  char i, j ;
+  unsigned char line; 
+  for (i=0; i<15; i++ ) {   
+    line = pgm_read_byte(bigFont+((int)c*16)+i);
+    for ( j = 0; j<8; j++) {
+      if (line & 0x80) {
+        drawPixel(x+j, y+i, color);
+      } else if (bg!=color){
+        drawPixel(x+j, y+i, bg);
+      }
+      line <<= 1;
+    }
+  }
+}
+
+inline void writeStringBig(char* str){
+/* Print text onto screen
+ * Call tft_setCursor(), tft_setTextColorBig()
+ *  as necessary before printing
+ */
+    while (*str){
+      char c = *str++;
+        drawCharBig(cursor_x, cursor_y, c, textcolor, textbgcolor);
+        cursor_x += 8 ;
+    }
+}
+
+inline void writeStringBold(char* str){
+/* Print text onto screen
+ * Call tft_setCursor(), tft_setTextColorBig()
+ *  as necessary before printing
+ */
+   /* Print text onto screen
+ * Call tft_setCursor(), tft_setTextColor(), tft_setTextSize()
+ *  as necessary before printing
+ */
+    char temp_bg ;
+    temp_bg = textbgcolor;
+    while (*str){
+        char c = *str++;
+        drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
+        drawChar(cursor_x+1, cursor_y, c, textcolor, textcolor, textsize);
+        cursor_x += 7 * textsize ;
+    }
+    textbgcolor = temp_bg ;
 }

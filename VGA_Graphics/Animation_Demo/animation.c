@@ -8,20 +8,21 @@
  * HARDWARE CONNECTIONS
  *  - GPIO 16 ---> VGA Hsync
  *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 330 ohm resistor ---> VGA Red
+ *  - GPIO 18 ---> 470 ohm resistor ---> VGA Green 
  *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
  *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
+ *  - GPIO 21 ---> 330 ohm resistor ---> VGA Red
  *  - RP2040 GND ---> VGA GND
  *
  * RESOURCES USED
  *  - PIO state machines 0, 1, and 2 on PIO instance 0
- *  - DMA channels 0, 1
+ *  - DMA channels (2, by claim mechanism)
  *  - 153.6 kBytes of RAM (for pixel color data)
  *
  */
 
 // Include the VGA grahics library
-#include "vga_graphics.h"
+#include "vga16_graphics.h"
 // Include standard libraries
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,7 +38,7 @@
 #include "hardware/clocks.h"
 #include "hardware/pll.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1.h"
+#include "pt_cornell_rp2040_v1_3.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15 ;
@@ -137,7 +138,7 @@ static PT_THREAD (protothread_serial(struct pt *pt))
     serial_write ;
       while(1) {
         // print prompt
-        sprintf(pt_serial_out_buffer, "input a number in the range 1-7: ");
+        sprintf(pt_serial_out_buffer, "input a number in the range 1-15: ");
         // non-blocking write
         serial_write ;
         // spawn a thread to do the non-blocking serial read
@@ -145,7 +146,7 @@ static PT_THREAD (protothread_serial(struct pt *pt))
         // convert input string to number
         sscanf(pt_serial_in_buffer,"%d", &user_input) ;
         // update boid color
-        if ((user_input > 0) && (user_input < 8)) {
+        if ((user_input > 0) && (user_input < 16)) {
           color = (char)user_input ;
         }
       } // END WHILE(1)

@@ -3,22 +3,23 @@
  * 
  *
  * HARDWARE CONNECTIONS
- *  - GPIO 16 ---> VGA Hsync
- *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 330 ohm resistor ---> VGA Red
- *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
- *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
- *  - RP2040 GND ---> VGA GND
+   - GPIO 16 ---> VGA Hsync 
+   - GPIO 17 ---> VGA Vsync 
+   - GPIO 18 ---> VGA Green lo-bit --> 470 ohm resistor --> VGA_Green
+   - GPIO 19 ---> VGA Green hi_bit --> 330 ohm resistor --> VGA_Green
+   - GPIO 20 ---> 330 ohm resistor ---> VGA-Blue 
+   - GPIO 21 ---> 330 ohm resistor ---> VGA-Red 
+   - RP2040 GND ---> VGA-GND
  *
  * RESOURCES USED
  *  - PIO state machines 0, 1, and 2 on PIO instance 0
- *  - DMA channels 0, 1, 2, and 3
+ *  - DMA channels obtained by claim mechanism
  *  - 153.6 kBytes of RAM (for pixel color data)
  *
  */
 
 // VGA graphics library
-#include "vga_graphics.h"
+#include "vga16_graphics.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
@@ -77,6 +78,8 @@ int main() {
     writeString("Hunter Adams") ;
     setCursor(65, 30) ;
     writeString("vha3@cornell.edu") ;
+    setCursor(65, 40) ;
+    writeString("4-bit mod by Bruce Land") ;
     setCursor(250, 0) ;
     setTextSize(2) ;
     writeString("Time Elapsed:") ;
@@ -88,7 +91,7 @@ int main() {
     while(true) {
 
         // Modify the color chooser
-        if (color_index ++ == 7) color_index = 0 ;
+        if (color_index ++ == 15) color_index = 0 ;
 
         // A row of filled circles
         fillCircle(disc_x, 100, 20, color_index);
