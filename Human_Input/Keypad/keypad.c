@@ -15,9 +15,10 @@
  * VGA CONNECTIONS
  *  - GPIO 16 ---> VGA Hsync
  *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 330 ohm resistor ---> VGA Red
+ *  - GPIO 18 ---> 470 ohm resistor ---> VGA Green 
  *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
  *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
+ *  - GPIO 21 ---> 330 ohm resistor ---> VGA Red
  *  - RP2040 GND ---> VGA GND
  * 
  * SERIAL CONNECTIONS
@@ -40,8 +41,8 @@
 #include "hardware/spi.h"
 
 // VGA graphics library
-#include "vga_graphics.h"
-#include "pt_cornell_rp2040_v1.h"
+#include "vga16_graphics.h"
+#include "pt_cornell_rp2040_v1_3.h"
 
 
 // Keypad pin configurations
@@ -98,6 +99,8 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
         }
         // Otherwise, indicate invalid/non-pressed buttons
         else (i=-1) ;
+
+
 
         // Write key to VGA
         if (i != prev_key) {

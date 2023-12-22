@@ -6,22 +6,9 @@
  * https://vanhunteradams.com/Pico/VGA/Trackpad.html
  * 
  *
- * HARDWARE CONNECTIONS
- *  - GPIO 16 ---> VGA Hsync
- *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 330 ohm resistor ---> VGA Red
- *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
- *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
- *  - RP2040 GND ---> VGA GND
- *
- * RESOURCES USED
- *  - PIO state machines 0, 1, and 2 on PIO instance 0
- *  - DMA channels 0, 1, 2, and 3
- *  - 153.6 kBytes of RAM (for pixel color data)
- *
  */
 
-#include "vga_graphics.h"
+#include "vga16_graphics.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
