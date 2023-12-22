@@ -37,9 +37,9 @@
 #include "hardware/pio.h"
 #include "hardware/i2c.h"
 // Include custom libraries
-#include "vga_graphics.h"
+#include "vga16_graphics.h"
 #include "mpu6050.h"
-#include "pt_cornell_rp2040_v1.h"
+#include "pt_cornell_rp2040_v1_3.h"
 
 // Arrays in which raw measurements will be stored
 fix15 acceleration[3], gyro[3];
@@ -217,8 +217,8 @@ int main() {
     i2c_init(I2C_CHAN, I2C_BAUD_RATE) ;
     gpio_set_function(SDA_PIN, GPIO_FUNC_I2C) ;
     gpio_set_function(SCL_PIN, GPIO_FUNC_I2C) ;
-    // gpio_pull_up(SDA_PIN) ;
-    // gpio_pull_up(SCL_PIN) ;
+    gpio_pull_up(SDA_PIN) ;
+    gpio_pull_up(SCL_PIN) ;
 
     // MPU6050 initialization
     mpu6050_reset();
