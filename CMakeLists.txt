@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
+# Comment the line below in for the Pico W examples to build
+# set(PICO_BOARD pico_w)
+
 # Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -23,6 +26,7 @@ add_subdirectory(Networking)
 add_subdirectory(PWM)
 add_subdirectory(Protothreads)
 add_subdirectory(Bootloaders)
+add_subdirectory(Bluetooth)
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
