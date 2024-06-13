@@ -219,6 +219,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 	// Write characteristic value
 	if (attribute_handle == service_object.characteristic_b_handle) {
 		custom_service_t * instance = &service_object ;
+		buffer[buffer_size] = 0 ;
 		memset(service_object.characteristic_b_value, 0, strlen(service_object.characteristic_b_value)) ;
 		memcpy(service_object.characteristic_b_value, buffer, strlen(buffer)) ;
 		// If client has enabled notifications, register a callback
@@ -246,6 +247,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 	// Write characteristic value
 	if (attribute_handle == service_object.characteristic_d_handle) {
 		custom_service_t * instance = &service_object ;
+		buffer[buffer_size] = 0 ;
 		memset(service_object.characteristic_d_value, 0, sizeof(service_object.characteristic_d_value)) ;
 		memcpy(service_object.characteristic_d_value, buffer, buffer_size) ;
 		// Null-terminate the string
@@ -263,6 +265,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 	// Write characteristic value
 	if (attribute_handle == service_object.characteristic_e_handle) {
 		custom_service_t * instance = &service_object ;
+		buffer[buffer_size] = 0 ;
 		if (!strcmp(buffer, "OFF")) {
 			memset(service_object.characteristic_e_value, 0, sizeof(service_object.characteristic_e_value)) ;
 			memcpy(service_object.characteristic_e_value, buffer, buffer_size) ;
@@ -284,8 +287,9 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 	// Write characteristic value
 	if (attribute_handle == service_object.characteristic_f_handle) {
 		custom_service_t * instance = &service_object ;
+		buffer[buffer_size] = 0 ;
 		if(atoi(buffer)<16) {
-			memset(service_object.characteristic_f_value, 0, strlen(service_object.characteristic_b_value)) ;
+			memset(service_object.characteristic_f_value, 0, strlen(service_object.characteristic_f_value)) ;
 			memcpy(service_object.characteristic_f_value, buffer, strlen(buffer)) ;
 			// Null-terminate the string
 			service_object.characteristic_f_value[buffer_size] = 0 ;
