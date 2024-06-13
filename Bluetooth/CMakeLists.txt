@@ -6,6 +6,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
             message("Skipping Pico W Bluetooth examples as support is not available")
         else()
             add_subdirectory(GATT_Server)
+	    add_subdirectory(GATT_Client)
         endif()
     endif()
 endif()
