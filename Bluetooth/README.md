@@ -4,4 +4,4 @@
 - [Documentation here](https://vanhunteradams.com/Pico/BLE/GATT_Server.html)
 
 #### GATT Client
-- Documentation under construction
+- [Documentation here](https://vanhunteradams.com/Pico/BLE/GATT_Client.html)
