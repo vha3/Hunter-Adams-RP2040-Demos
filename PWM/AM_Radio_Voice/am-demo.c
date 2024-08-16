@@ -24,6 +24,8 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
+// Interface library to sys_clock
+#include "hardware/clocks.h"
 #include "hardware/pwm.h"
 #include "hardware/dma.h"
 #include "hardware/adc.h"

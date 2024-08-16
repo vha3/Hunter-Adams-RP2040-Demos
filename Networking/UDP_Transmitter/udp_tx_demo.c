@@ -38,6 +38,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
+// Interface library to sys_clock
+#include "hardware/clocks.h"
 #include "udp_tx.h"
 
 
