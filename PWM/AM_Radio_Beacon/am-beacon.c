@@ -22,6 +22,8 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
+// Interface library to sys_clock
+#include "hardware/clocks.h"
 #include "hardware/pwm.h"
 
 // Low-level alarm infrastructure we'll be using

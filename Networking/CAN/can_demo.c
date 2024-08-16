@@ -12,6 +12,8 @@
 // High-level pico libraries
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+// Interface library to sys_clock
+#include "hardware/clocks.h"
 // Interface library to watchdog
 #include "hardware/watchdog.h"
 // CAN driver
