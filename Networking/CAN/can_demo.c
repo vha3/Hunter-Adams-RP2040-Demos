@@ -12,7 +12,7 @@
 // High-level pico libraries
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
-// Interface library to sys_clock
+// Interface library to sys_clock (SDK 2.0.0)
 #include "hardware/clocks.h"
 // Interface library to watchdog
 #include "hardware/watchdog.h"
