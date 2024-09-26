@@ -13,6 +13,7 @@
    GPIO 2 (pin 4) GPIO output for timing ISR
    3.3v (pin 36) -> VCC on DAC 
    GND (pin 3)  -> GND on DAC 
+   
  */
 
 #include <stdio.h>
