@@ -1,9 +1,9 @@
-add_executable(udp_transmitter)
+add_executable(UDP_Transmitter_PIO)
 
-pico_generate_pio_header(udp_transmitter ${CMAKE_CURRENT_LIST_DIR}/udp_transmit.pio)
+pico_generate_pio_header(UDP_Transmitter_PIO ${CMAKE_CURRENT_LIST_DIR}/udp_transmit.pio)
 
-target_sources(udp_transmitter PRIVATE udp_tx_demo.c)
+target_sources(UDP_Transmitter_PIO PRIVATE udp_tx_demo.c)
 
-target_link_libraries(udp_transmitter PRIVATE pico_stdlib pico_unique_id hardware_pio hardware_dma hardware_pwm)
+target_link_libraries(UDP_Transmitter_PIO PRIVATE pico_stdlib pico_unique_id hardware_pio hardware_dma hardware_pwm)
 
-pico_add_extra_outputs(udp_transmitter)
+pico_add_extra_outputs(UDP_Transmitter_PIO)

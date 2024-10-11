@@ -4,14 +4,14 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
         -Os)
 
-add_executable(serial_bootloader)
+add_executable(Serial_Bootloader)
 
-target_sources(serial_bootloader PRIVATE bootloader.c)
+target_sources(Serial_Bootloader PRIVATE bootloader.c)
 
-pico_set_linker_script(serial_bootloader ${CMAKE_CURRENT_SOURCE_DIR}/bootloader_memmap.ld)
+pico_set_linker_script(Serial_Bootloader ${CMAKE_CURRENT_SOURCE_DIR}/bootloader_memmap.ld)
 
 # Pull in our pico_stdlib which pulls in commonly used features
-target_link_libraries(serial_bootloader pico_stdlib hardware_dma hardware_uart hardware_flash hardware_watchdog hardware_pwm)
+target_link_libraries(Serial_Bootloader pico_stdlib hardware_dma hardware_uart hardware_flash hardware_watchdog hardware_pwm)
 
 # create map/bin/hex file etc.
-pico_add_extra_outputs(serial_bootloader)
+pico_add_extra_outputs(Serial_Bootloader)

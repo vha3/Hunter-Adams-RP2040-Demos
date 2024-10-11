@@ -4,14 +4,14 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
         )
 
-add_executable(worm_blinky)
+add_executable(Worm_Bootloader_application)
 
-target_sources(worm_blinky PRIVATE worm_blinky.c)
+target_sources(Worm_Bootloader_application PRIVATE worm_blinky.c)
 
-pico_set_linker_script(worm_blinky ${CMAKE_CURRENT_SOURCE_DIR}/worm_application.ld)
+pico_set_linker_script(Worm_Bootloader_application ${CMAKE_CURRENT_SOURCE_DIR}/worm_application.ld)
 
 # Pull in our pico_stdlib which pulls in commonly used features
-target_link_libraries(worm_blinky pico_stdlib hardware_dma hardware_uart hardware_flash hardware_irq hardware_watchdog)
+target_link_libraries(Worm_Bootloader_application pico_stdlib hardware_dma hardware_uart hardware_flash hardware_irq hardware_watchdog)
 
 # create map/bin/hex file etc.
-pico_add_extra_outputs(worm_blinky)
+pico_add_extra_outputs(Worm_Bootloader_application)

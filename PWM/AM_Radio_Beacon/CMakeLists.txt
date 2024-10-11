@@ -1,10 +1,10 @@
-add_executable(am_beacon)
+add_executable(PWM_Radio_Beacon)
 
 # must match with executable name and source file names
-target_sources(am_beacon PRIVATE am-beacon.c)
+target_sources(PWM_Radio_Beacon PRIVATE am-beacon.c)
 
 # Add pico_multicore which is required for multicore functionality
-target_link_libraries(am_beacon pico_stdlib pico_multicore hardware_pwm)
+target_link_libraries(PWM_Radio_Beacon pico_stdlib pico_multicore hardware_pwm)
 
 # create map/bin/hex file etc.
-pico_add_extra_outputs(am_beacon)
+pico_add_extra_outputs(PWM_Radio_Beacon)

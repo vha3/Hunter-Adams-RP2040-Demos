@@ -1,7 +1,7 @@
-add_executable(dactest)
+add_executable(Audio_Timer_Interrupt_DDS)
 
-target_sources(dactest PRIVATE dactest.c)
+target_sources(Audio_Timer_Interrupt_DDS PRIVATE dactest.c)
 
-target_link_libraries(dactest pico_stdlib hardware_spi hardware_timer hardware_irq)
+target_link_libraries(Audio_Timer_Interrupt_DDS pico_stdlib hardware_spi hardware_timer hardware_irq)
 
-pico_add_extra_outputs(dactest)
+pico_add_extra_outputs(Audio_Timer_Interrupt_DDS)
