@@ -5,12 +5,12 @@
     thru an SPI DAC, once per second. A single protothread
     blinks the LED.
 
-    GPIO 5 (pin 7) Chip select
-    GPIO 6 (pin 9) SCK/spi0_sclk
-    GPIO 7 (pin 10) MOSI/spi0_tx
-    GPIO 2 (pin 4) GPIO output for timing ISR
-    3.3v (pin 36) -> VCC on DAC 
-    GND (pin 3)  -> GND on DAC 
+    GPIO 5 (pin 7) Chip select --> White
+    GPIO 6 (pin 9) SCK/spi0_sclk --> Green
+    GPIO 7 (pin 10) MOSI/spi0_tx --> Orange
+    GPIO 2 (pin 4) GPIO output for timing ISR --> Blue
+    3.3v (pin 36) -> VCC on DAC --> red
+    GND (pin 3)  -> GND on DAC --> Black
 
  */
 
