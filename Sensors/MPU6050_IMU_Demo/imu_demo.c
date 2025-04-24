@@ -10,9 +10,10 @@
  * HARDWARE CONNECTIONS
  *  - GPIO 16 ---> VGA Hsync
  *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 330 ohm resistor ---> VGA Red
+ *  - GPIO 18 ---> 470 ohm resistor ---> VGA Green
  *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
  *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
+ *  - GPIO 21 ---> 330 ohm resistor ---> VGA Red
  *  - RP2040 GND ---> VGA GND
  *  - GPIO 8 ---> MPU6050 SDA
  *  - GPIO 9 ---> MPU6050 SCL
