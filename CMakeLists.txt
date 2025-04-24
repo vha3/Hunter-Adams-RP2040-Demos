@@ -27,6 +27,7 @@ add_subdirectory(PWM)
 add_subdirectory(Protothreads)
 add_subdirectory(Bootloaders)
 add_subdirectory(Bluetooth)
+add_subdirectory(WiFi)
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
