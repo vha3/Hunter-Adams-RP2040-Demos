@@ -6,13 +6,11 @@
 // #include "C:\Users\16073\OneDrive\Documents\Pico-v1.5.0\FatFs_SPI\include\rtc.h"
 // //
 
-#include "..\brl4_sd_serial\FatFs_SPI\sd_driver\hw_config.h"
-
-#include "..\brl4_sd_serial\FatFs_SPI\include\f_util.h"
+#include "..\SD_Card\FatFs_SPI\include\f_util.h"
 #include "E:\picoSDK\pico-sdk\lib\tinyusb\lib\fatfs\source\ff.h"
-#include "pico/stdlib.h"
-#include "..\brl4_sd_serial\FatFs_SPI\include\rtc.h"
-#include "..\brl4_sd_serial\FatFs_SPI\sd_driver\hw_config.h"
+#include "stdlib.h"
+#include "..\SD_Card\FatFs_SPI\include\rtc.h"
+#include "..\SD_Card\FatFs_SPI\sd_driver\hw_config.h"
 
 int main()
 {
