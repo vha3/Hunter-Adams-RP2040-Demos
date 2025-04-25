@@ -1,0 +1,188 @@
+
+/*
+ FatFs license
+ Copyright 2021 Carl John Kugler III
+
+Licensed under the Apache License, Version 2.0 (the License); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an AS IS BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+*/
+/*
+ * This code borrows heavily from the Mbed SDBlockDevice:
+ *       https://os.mbed.com/docs/mbed-os/v5.15/apis/sdblockdevice.html
+ *       mbed-os/components/storage/blockdevice/COMPONENT_SD/SDBlockDevice.cpp
+ *
+ * Editor: Carl Kugler (carlk3@gmail.com)
+ *
+ * Remember your ABCs: "Always Be Cobbling!"
+ *
+ */
+
+/*TINYUSB license (for the CLI commnads)
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Ha Thach (tinyusb.org)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
+
+/* mbed Microcontroller Library
+ * Copyright (c) 2006-2013 ARM Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Introduction
+ * ------------
+ * SD and MMC cards support a number of interfaces, but common to them all
+ * is one based on SPI. Since we already have the mbed SPI Interface, it will
+ * be used for SD cards.
+ *
+ * The main reference I'm using is Chapter 7, "SPI Mode" of:
+ *  http://www.sdcard.org/developers/tech/sdcard/pls/Simplified_Physical_Layer_Spec.pdf
+ *
+ * SPI Startup
+ * -----------
+ * The SD card powers up in SD mode. The start-up procedure is complicated
+ * by the requirement to support older SDCards in a backwards compatible
+ * way with the new higher capacity variants SDHC and SDHC.
+ *
+ * The following figures from the specification with associated text describe
+ * the SPI mode initialisation process:
+ *  - Figure 7-1: SD Memory Card State Diagram (SPI mode)
+ *  - Figure 7-2: SPI Mode Initialization Flow
+ *
+ * Firstly, a low initial clock should be selected (in the range of 100-
+ * 400kHZ). After initialisation has been completed, the switch to a
+ * higher clock speed can be made (e.g. 1MHz). Newer cards will support
+ * higher speeds than the default _transfer_sck defined here.
+ *
+ * Next, note the following from the SDCard specification (note to
+ * Figure 7-1):
+ *
+ *  In any of the cases CMD1 is not recommended because it may be difficult for
+ * the host to distinguish between MultiMediaCard and SD Memory Card
+ *
+ * Hence CMD1 is not used for the initialisation sequence.
+ *
+ * The SPI interface mode is selected by asserting CS low and sending the
+ * reset command (CMD0). The card will respond with a (R1) response.
+ * In practice many cards initially respond with 0xff or invalid data
+ * which is ignored. Data is read until a valid response is received
+ * or the number of re-reads has exceeded a maximim count. If a valid
+ * response is not received then the CMD0 can be retried. This
+ * has been found to successfully initialise cards where the SPI master
+ * (on MCU) has been reset but the SDCard has not, so the first
+ * CMD0 may be lost.
+ *
+ * CMD8 is optionally sent to determine the voltage range supported, and
+ * indirectly determine whether it is a version 1.x SD/non-SD card or
+ * version 2.x. I'll just ignore this for now.
+ *
+ * ACMD41 is repeatedly issued to initialise the card, until "in idle"
+ * (bit 0) of the R1 response goes to '0', indicating it is initialised.
+ *
+ * You should also indicate whether the host supports High Capicity cards,
+ * and check whether the card is high capacity - i'll also ignore this.
+ *
+ * SPI Protocol
+ * ------------
+ * The SD SPI protocol is based on transactions made up of 8-bit words, with
+ * the host starting every bus transaction by asserting the CS signal low. The
+ * card always responds to commands, data blocks and errors.
+ *
+ * The protocol supports a CRC, but by default it is off (except for the
+ * first reset CMD0, where the CRC can just be pre-calculated, and CMD8)
+ * I'll leave the CRC off I think!
+ *
+ * Standard capacity cards have variable data block sizes, whereas High
+ * Capacity cards fix the size of data block to 512 bytes. I'll therefore
+ * just always use the Standard Capacity cards with a block size of 512 bytes.
+ * This is set with CMD16.
+ *
+ * You can read and write single blocks (CMD17, CMD25) or multiple blocks
+ * (CMD18, CMD25). For simplicity, I'll just use single block accesses. When
+ * the card gets a read command, it responds with a response token, and then
+ * a data token or an error.
+ *
+ * SPI Command Format
+ * ------------------
+ * Commands are 6-bytes long, containing the command, 32-bit argument, and CRC.
+ *
+ * +---------------+------------+------------+-----------+----------+--------------+
+ * | 01 | cmd[5:0] | arg[31:24] | arg[23:16] | arg[15:8] | arg[7:0] | crc[6:0] |
+ * 1 |
+ * +---------------+------------+------------+-----------+----------+--------------+
+ *
+ * As I'm not using CRC, I can fix that byte to what is needed for CMD0 (0x95)
+ *
+ * All Application Specific commands shall be preceded with APP_CMD (CMD55).
+ *
+ * SPI Response Format
+ * -------------------
+ * The main response format (R1) is a status byte (normally zero). Key flags:
+ *  idle - 1 if the card is in an idle state/initialising
+ *  cmd  - 1 if an illegal command code was detected
+ *
+ *    +-------------------------------------------------+
+ * R1 | 0 | arg | addr | seq | crc | cmd | erase | idle |
+ *    +-------------------------------------------------+
+ *
+ * R1b is the same, except it is followed by a busy signal (zeros) until
+ * the first non-zero byte when it is ready again.
+ *
+ * Data Response Token
+ * -------------------
+ * Every data block written to the card is acknowledged by a byte
+ * response token
+ *
+ * +----------------------+
+ * | xxx | 0 | status | 1 |
+ * +----------------------+
+ *              010 - OK!
+ *              101 - CRC Error
+ *              110 - Write Error
+ *
+ * Single Block Read and Write
+ * ---------------------------
+ *
+ * Block transfers have a byte header, followed by the data, followed
+ * by a 16-bit CRC. In our case, the data will always be 512 bytes.
+ *
+ * +------+---------+---------+- -  - -+---------+-----------+----------+
+ * | 0xFE | data[0] | data[1] |        | data[n] | crc[15:8] | crc[7:0] |
+ * +------+---------+---------+- -  - -+---------+-----------+----------+
+ */
