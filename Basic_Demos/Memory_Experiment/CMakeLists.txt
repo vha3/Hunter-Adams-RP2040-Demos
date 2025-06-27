@@ -10,7 +10,11 @@ project(Memory_Experiment C CXX ASM)
 # initialize the sdk
 pico_sdk_init()
 
-add_executable(Memory_Experiment PRIVATE memory_experimentation.c)
+# add executable
+add_executable(Memory_Experiment)
+
+# add sources
+target_sources(Memory_Experiment PRIVATE memory_experimentation.c)
 
 # Pull in our pico_stdlib which pulls in commonly used features
 target_link_libraries(Memory_Experiment pico_stdlib)

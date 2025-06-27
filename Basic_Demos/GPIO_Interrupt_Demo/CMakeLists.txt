@@ -10,7 +10,11 @@ project(GPIO_Interrupt_Demo C CXX ASM)
 # initialize the sdk
 pico_sdk_init()
 
-add_executable(GPIO_Interrupt_Demo PRIVATE irq_timing.c)
+# add executable
+add_executable(GPIO_Interrupt_Demo)
+
+# add sources
+target_sources(GPIO_Interrupt_Demo PRIVATE irq_timing.c)
 
 # Pull in our pico_stdlib which pulls in commonly used features
 target_link_libraries(GPIO_Interrupt_Demo pico_stdlib)
