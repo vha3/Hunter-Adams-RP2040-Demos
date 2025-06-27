@@ -1,3 +1,15 @@
+# cmake version
+cmake_minimum_required(VERSION 3.13)
+
+# include the sdk.cmake file
+include(pico_sdk_import.cmake)
+
+# give the project a name (anything you want)
+project(Blinky C CXX ASM)
+
+# initialize the sdk
+pico_sdk_init()
+
 add_executable(Blinky)
 
 target_sources(Blinky PRIVATE blinky.c)
