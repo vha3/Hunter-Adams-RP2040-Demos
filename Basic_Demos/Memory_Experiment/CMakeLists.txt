@@ -7,7 +7,10 @@ include(pico_sdk_import.cmake)
 # give the project a name (anything you want)
 project(Memory_Experiment C CXX ASM)
 
-add_executable(Memory_Experiment memory_experimentation.c)
+# initialize the sdk
+pico_sdk_init()
+
+add_executable(Memory_Experiment PRIVATE memory_experimentation.c)
 
 # Pull in our pico_stdlib which pulls in commonly used features
 target_link_libraries(Memory_Experiment pico_stdlib)
