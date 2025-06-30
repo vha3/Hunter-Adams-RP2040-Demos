@@ -26,7 +26,7 @@ add_subdirectory(Networking)
 add_subdirectory(PWM)
 add_subdirectory(Protothreads)
 add_subdirectory(Bootloaders)
-add_subdirectory(Bluetooth)
+#add_subdirectory(Bluetooth)
 add_subdirectory(WiFi)
 
 add_compile_options(-Wall
