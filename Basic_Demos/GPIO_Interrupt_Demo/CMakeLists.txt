@@ -17,7 +17,7 @@ add_executable(GPIO_Interrupt_Demo)
 target_sources(GPIO_Interrupt_Demo PRIVATE irq_timing.c)
 
 # Pull in our pico_stdlib which pulls in commonly used features
-target_link_libraries(GPIO_Interrupt_Demo pico_stdlib)
+target_link_libraries(GPIO_Interrupt_Demo pico_stdlib pico_bootsel_via_double_reset)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(GPIO_Interrupt_Demo)

@@ -17,7 +17,7 @@ add_executable(Memory_Experiment)
 target_sources(Memory_Experiment PRIVATE memory_experimentation.c)
 
 # Pull in our pico_stdlib which pulls in commonly used features
-target_link_libraries(Memory_Experiment pico_stdlib)
+target_link_libraries(Memory_Experiment pico_stdlib pico_bootsel_via_double_reset)
 
 # pico_set_binary_type(Memory_Experiment no_flash)
 

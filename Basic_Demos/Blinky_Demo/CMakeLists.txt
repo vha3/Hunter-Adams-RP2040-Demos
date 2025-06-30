@@ -15,7 +15,7 @@ add_executable(Blinky)
 target_sources(Blinky PRIVATE blinky.c)
 
 # Pull in our pico_stdlib which pulls in commonly used features
-target_link_libraries(Blinky pico_stdlib)
+target_link_libraries(Blinky pico_stdlib pico_bootsel_via_double_reset)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(Blinky)
