@@ -16,7 +16,7 @@ set(HUNTER_PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 pico_sdk_init()
 
 # Add multi example
-add_subdirectory(Human_Input)
+#add_subdirectory(Human_Input)
 #add_subdirectory(Audio)
 add_subdirectory(Sensors)
 #add_subdirectory(Basic_Demos)
