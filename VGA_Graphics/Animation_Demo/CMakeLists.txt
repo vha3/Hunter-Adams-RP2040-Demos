@@ -1,3 +1,15 @@
+# cmake version
+cmake_minimum_required(VERSION 3.13)
+
+# include the sdk.cmake file
+include(pico_sdk_import.cmake)
+
+# give the project a name (anything you want)
+project(VGA_Animation_Demo C CXX ASM)
+
+# initialize the sdk
+pico_sdk_init()
+
 add_executable(VGA_Animation_Demo)
 
 add_compile_options(-Ofast)
