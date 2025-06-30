@@ -1,7 +1,21 @@
-add_executable( GATT_Server 
+# cmake version
+cmake_minimum_required(VERSION 3.13)
+
+# include the sdk.cmake file
+include(pico_sdk_import.cmake)
+
+# give the project a name (anything you want)
+project(GATT_Server C CXX ASM)
+
+# initialize the sdk
+pico_sdk_init()
+
+add_executable( GATT_Server )
+
+target_sources( GATT_Server
+                PRIVATE
                 server_demo.c
-                VGA/vga16_graphics.c
-                )
+                VGA/vga16_graphics.c)
 
 # must match with pio filename and executable name from above
 pico_generate_pio_header(GATT_Server ${CMAKE_CURRENT_LIST_DIR}/VGA/hsync.pio)
@@ -15,6 +29,7 @@ target_link_libraries(GATT_Server
     pico_btstack_ble
     pico_btstack_cyw43
     pico_cyw43_arch_none
+    pico_bootsel_via_double_reset
     hardware_irq
     hardware_spi
     hardware_timer
