@@ -25,7 +25,7 @@ add_subdirectory(VGA_Graphics)
 add_subdirectory(Networking)
 add_subdirectory(PWM)
 add_subdirectory(Protothreads)
-add_subdirectory(Bootloaders)
+#add_subdirectory(Bootloaders)
 #add_subdirectory(Bluetooth)
 add_subdirectory(WiFi)
 
