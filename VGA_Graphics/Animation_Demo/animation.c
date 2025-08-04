@@ -6,13 +6,13 @@
  * Through a serial interface, the user can change the ball color.
  *
  * HARDWARE CONNECTIONS
- *  - GPIO 16 ---> VGA Hsync
- *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 470 ohm resistor ---> VGA Green 
- *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
- *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
- *  - GPIO 21 ---> 330 ohm resistor ---> VGA Red
- *  - RP2040 GND ---> VGA GND
+  - GPIO 16 ---> VGA Hsync
+  - GPIO 17 ---> VGA Vsync
+  - GPIO 18 ---> VGA Green lo-bit --> 470 ohm resistor --> VGA_Green
+  - GPIO 19 ---> VGA Green hi_bit --> 330 ohm resistor --> VGA_Green
+  - GPIO 20 ---> 330 ohm resistor ---> VGA-Blue
+  - GPIO 21 ---> 330 ohm resistor ---> VGA-Red
+  - RP2040 GND ---> VGA-GND
  *
  * RESOURCES USED
  *  - PIO state machines 0, 1, and 2 on PIO instance 0
@@ -22,7 +22,7 @@
  */
 
 // Include the VGA grahics library
-#include "vga16_graphics.h"
+#include "vga16_graphics_v2.h"
 // Include standard libraries
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +38,7 @@
 #include "hardware/clocks.h"
 #include "hardware/pll.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1_3.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15 ;
@@ -234,6 +234,7 @@ void core1_main(){
 // ========================================
 // USE ONLY C-sdk library
 int main(){
+  set_sys_clock_khz(150000, true) ;
   // initialize stio
   stdio_init_all() ;
 
