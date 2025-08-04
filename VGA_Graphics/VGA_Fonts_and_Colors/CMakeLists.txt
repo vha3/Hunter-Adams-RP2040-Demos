@@ -5,27 +5,23 @@ cmake_minimum_required(VERSION 3.13)
 include(pico_sdk_import.cmake)
 
 # give the project a name (anything you want)
-project(VGA_Fonts_and_Colors_Demo C CXX ASM)
+project(VGA_Graphics_Fonts_and_Colors C CXX ASM)
 
 # initialize the sdk
 pico_sdk_init()
 
-# name anything you want
-add_executable(VGA_Fonts_and_Colors_Demo)
+add_executable(VGA_Graphics_Fonts_and_Colors)
 
 # must match with pio filename and executable name from above
-pico_generate_pio_header(VGA_Fonts_and_Colors_Demo ${CMAKE_CURRENT_LIST_DIR}/hsync.pio)
-pico_generate_pio_header(VGA_Fonts_and_Colors_Demo ${CMAKE_CURRENT_LIST_DIR}/vsync.pio)
-pico_generate_pio_header(VGA_Fonts_and_Colors_Demo ${CMAKE_CURRENT_LIST_DIR}/rgb.pio)
+pico_generate_pio_header(VGA_Graphics_Fonts_and_Colors ${CMAKE_CURRENT_LIST_DIR}/hsync.pio)
+pico_generate_pio_header(VGA_Graphics_Fonts_and_Colors ${CMAKE_CURRENT_LIST_DIR}/vsync.pio)
+pico_generate_pio_header(VGA_Graphics_Fonts_and_Colors ${CMAKE_CURRENT_LIST_DIR}/rgb.pio)
 
 # must match with executable name and source file names
-target_sources(VGA_Fonts_and_Colors_Demo PRIVATE 
-	vga16_graphics_font.c 
-	vga16_graphics.c
-)
+target_sources(VGA_Graphics_Fonts_and_Colors PRIVATE vga16_graphics_demo.c vga16_graphics_v2.c)
 
 # must match with executable name
-target_link_libraries(VGA_Fonts_and_Colors_Demo PRIVATE 
+target_link_libraries(VGA_Graphics_Fonts_and_Colors PRIVATE 
 	pico_stdlib 
 	pico_bootsel_via_double_reset 
 	hardware_pio 
@@ -34,9 +30,9 @@ target_link_libraries(VGA_Fonts_and_Colors_Demo PRIVATE
 	hardware_sync
 	hardware_irq
 	pico_multicore
+	hardware_clocks
+	hardware_vreg
 )
 
 # must match with executable name
-pico_add_extra_outputs(VGA_Fonts_and_Colors_Demo)
-
-add_compile_options(-Ofast)
+pico_add_extra_outputs(VGA_Graphics_Fonts_and_Colors)
