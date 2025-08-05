@@ -25,7 +25,7 @@
  */
 
 // Include VGA graphics library
-#include "vga16_graphics.h"
+#include "vga16_graphics_v2.h"
 // Include standard libraries
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@
 #include "hardware/adc.h"
 #include "hardware/irq.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1_3.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 // Define the LED pin
 #define LED     25
