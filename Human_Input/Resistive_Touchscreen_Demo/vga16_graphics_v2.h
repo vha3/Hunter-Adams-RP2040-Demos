@@ -37,7 +37,7 @@ enum colors {BLACK, DARK_GREEN, MED_GREEN, GREEN,
 void initVGA(void) ;
 void drawPixel(short x, short y, char color) ;
 void drawVLine(short x, short y, short h, char color) ;
-void drawHLine(short x, short y, short w, char color) ;
+void drawHLine(int x, int y, int w, char color) ; // faster mod 5/11/2025
 void drawLine(short x0, short y0, short x1, short y1, char color) ;
 void drawRect(short x, short y, short w, short h, char color);
 void drawCircle(short x0, short y0, short r, char color) ;
@@ -55,9 +55,18 @@ void setTextSize(unsigned char s);
 void setTextWrap(char w);
 void tft_write(unsigned char c) ;
 void writeString(char* str) ;
-// === added 10/11/2023 brl4
+// ===  strings added 10/11/2023 brl4
 void drawCharBig(short x, short y, unsigned char c, char color, char bg) ;
 void writeStringBig(char* str) ;
 void setTextColorBig(char, char); //works, but can use usual setTextColor2
 // 5x7 font
 void writeStringBold(char* str);
+// === added by brl4 5/11/2025
+// fast clear -- x1 and x2 must be EVEN numbered pixels
+void clearRect(short x1, short y1, short x2, short y2, short c) ;
+// clears the whole frame below top value
+void clearLowFrame(short, short) ;
+// === get the color of apixel from the frame buffer
+short readPixel(short, short) ;
+// draw a little cross
+void crosshair(short x, short y, short c) ;

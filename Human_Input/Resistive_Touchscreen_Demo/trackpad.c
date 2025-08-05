@@ -8,13 +8,14 @@
  *
  */
 
-#include "vga16_graphics.h"
+#include "vga16_graphics_v2.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/dma.h"
 #include "hardware/adc.h"
+#include "hardware/clocks.h"
 
 // Attached to resistive touchscreen
 #define XMINUS 6
@@ -127,6 +128,9 @@ bool repeating_timer_callback(struct repeating_timer *t) {
 
 
 int main() {
+
+    // Overclock
+    set_sys_clock_khz(150000, true) ;
 
     // Initialize stdio
     stdio_init_all();

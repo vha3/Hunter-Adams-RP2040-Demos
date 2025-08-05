@@ -18,10 +18,10 @@ pico_generate_pio_header(Resistive_Touchscreen ${CMAKE_CURRENT_LIST_DIR}/vsync.p
 pico_generate_pio_header(Resistive_Touchscreen ${CMAKE_CURRENT_LIST_DIR}/rgb.pio)
 
 # must match with executable name and source file names
-target_sources(Resistive_Touchscreen PRIVATE trackpad.c vga16_graphics.c)
+target_sources(Resistive_Touchscreen PRIVATE trackpad.c vga16_graphics_v2.c)
 
 # must match with executable name
-target_link_libraries(Resistive_Touchscreen PRIVATE pico_stdlib pico_bootsel_via_double_reset hardware_pio hardware_dma hardware_adc hardware_irq hardware_adc)
+target_link_libraries(Resistive_Touchscreen PRIVATE pico_stdlib pico_bootsel_via_double_reset hardware_pio hardware_dma hardware_adc hardware_irq hardware_adc hardware_clocks)
 
 # must match with executable name
 pico_add_extra_outputs(Resistive_Touchscreen)
