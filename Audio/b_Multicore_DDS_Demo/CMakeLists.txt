@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.13)
 include(pico_sdk_import.cmake)
 
 # give the project a name (anything you want)
-project(Audio_Timer_Interrupt_DDS C CXX ASM)
+project(Audio_Multicore_DDS_Demo C CXX ASM)
 
 # initialize the sdk
 pico_sdk_init()

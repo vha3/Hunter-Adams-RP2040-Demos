@@ -550,7 +550,8 @@ struct pt_sem {
  *
  * \hideinitializer
  */
-#define PT_SEM_SIGNAL(pt, s) ++(s)->count
+//#define PT_SEM_SIGNAL(pt, s) ++(s)->count
+#define PT_SEM_SIGNAL(pt,s) ++(s)->count
 
 #endif /* __PT_SEM_H__ */
 
@@ -582,83 +583,43 @@ struct pt_sem {
     } while(0);
 //
 // =================================================================
-// core-safe semaphore based on hardware/sync library
+// core-safe semaphore based on pico/sync library
+// NEEDS SDK 1.1.1 or higher
 // a hardware spinlock to force core-safe alternation
-// NOTE that the default semaphore is not
+// NOTE that the default protothreads semaphore is not
 // multi-core safe, but is OK one one core
 // The SAFE versions work across cores, but have more overhead
 
-spin_lock_t * sem_lock ;
-
-#define PT_SEM_SAFE_INIT(s,c) do{ \
-  sem_lock = spin_lock_init(25); \
-  spin_lock_unsafe_blocking (sem_lock); \
-  (s)->count = c ; \
-  spin_unlock_unsafe (sem_lock); \
-} while(0)
-
-#define PT_SEM_SAFE_WAIT(pt,s)	do {	\
-    spin_lock_unsafe_blocking (sem_lock); 	\
-    PT_YIELD_FLAG = 0;			\
-    LC_SET((pt)->lc);				\
-    if((PT_YIELD_FLAG == 0) || !((s)->count > 0)) {	\
-      spin_unlock_unsafe (sem_lock); 	\
-      return PT_YIELDED;      \
-    }		\
+#define PT_SEM_SDK_WAIT(pt,s)	do {	\
+   PT_YIELD_UNTIL (pt, sem_try_acquire (s)); \
    if(get_core_num()==1){ \
-    pt_executed1 = 1;;\
+      pt_executed1 = 1;\
     }  else {\
       pt_executed = 1;\
     }\
-    --(s)->count;	\
-    spin_unlock_unsafe (sem_lock); 	\
-  } while(0)
+  } while(0) ;
 
-#define PT_SEM_SAFE_SIGNAL(pt,s) do{ \
-    spin_lock_unsafe_blocking (sem_lock); \
-    ++(s)->count ; \
-    spin_unlock_unsafe (sem_lock) ; \
-} while(0)
+// removed (pt, 
+#define PT_SEM_SDK_SIGNAL(pt,s) do{ \
+  sem_release (s) ; \
+} while(0) ;
+
 
 // ==================================================================
-// lock based directly on spin-lock hardware
-// core-safe lock based on hardware/sync library
-// a non-counting hardware spinlock to force core-safe signalling
-#define UNLOCKED 0
-#define LOCKED 1
-spin_lock_t * lock_lock ;
-// general pattern will be to lock lock_lock
-// do specific lock operation (on another spin_lock)
-// unlock lock_lock
-// NOTE vaild lock_num are from 26-31 total of SIX hardware locks!
+// core-safe mutex based on pico/sync library
+// NEEDS SDK 1.1.1 or higher
 
-#define PT_LOCK_INIT(s,lock_num,lock_state) do{ \
-  lock_lock = spin_lock_init(24); \
-  spin_lock_unsafe_blocking (lock_lock); \
-  s = spin_lock_init((uint)lock_num); \
-  if(lock_state) spin_lock_unsafe_blocking (s); \
-  spin_unlock_unsafe (lock_lock) ; \
-} while(0)
-
-#define PT_LOCK_WAIT(pt,s)	do {	\
-  spin_lock_unsafe_blocking (lock_lock); \
-  PT_YIELD_FLAG = 0;				\
-  LC_SET((pt)->lc);				\
-  if((PT_YIELD_FLAG == 0) || !(is_spin_locked(s)==false)) {	\
-      spin_unlock_unsafe (lock_lock) ; \
-      return PT_YIELDED;                        \
-  }						\
+#define PT_MUTEX_SDK_AQUIRE(pt,s)	do {	\
+  PT_YIELD_UNTIL(pt, mutex_try_enter (s, NULL)); \
   if(get_core_num()==1){ \
-    pt_executed1 = 1;;\
+      pt_executed1 = 1;;\
     }  else {\
       pt_executed = 1;\
     }\
-  spin_lock_unsafe_blocking (s); \
-  spin_unlock_unsafe (lock_lock) ; \
 } while(0)
 
-#define PT_LOCK_RELEASE(s) do{ \
-    spin_unlock_unsafe (s) ; \
+#define PT_MUTEX_SDK_RELEASE(s) do{ \
+  mutex_exit(s); \
 } while(0)
 
 //====================================================================
@@ -673,7 +634,6 @@ do{ \
     PT_YIELD_UNTIL(pt, multicore_fifo_rvalid()==true); \
     fifo_out = multicore_fifo_pop_blocking() ; \
 } while(0) 
-
 
 // clears OUTGOING FIFO for urrent core
 #define PT_FIFO_FLUSH do{ \
@@ -935,7 +895,7 @@ static PT_THREAD (protothread_sched1(struct pt *pt))
 
 // === serial input thread ================================
 // serial buffers
-#define pt_buffer_size 100
+#define pt_buffer_size 255
 char pt_serial_in_buffer[pt_buffer_size];
 char pt_serial_out_buffer[pt_buffer_size];
 // thread pointers
@@ -1006,6 +966,9 @@ int pt_serialout_polled(struct pt *pt)
         uart_putc(UART_ID, pt_serial_out_buffer[num_send_chars]) ;
         num_send_chars++;
     }
+    // wait until all cha actually sent sent
+    //uart_tx_wait_blocking (UART_ID) ;
+
     // kill this output thread, to allow spawning thread to execute
     PT_EXIT(pt);
     // and indicate the end of the thread

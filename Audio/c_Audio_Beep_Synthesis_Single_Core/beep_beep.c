@@ -22,7 +22,7 @@
 #include "hardware/spi.h"
 #include "hardware/sync.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1_3.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 // Low-level alarm infrastructure we'll be using
 #define ALARM_NUM 0
