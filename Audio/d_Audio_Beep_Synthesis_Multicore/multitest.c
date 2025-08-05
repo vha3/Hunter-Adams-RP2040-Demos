@@ -30,7 +30,7 @@
 #include "hardware/spi.h"
 #include "hardware/timer.h"
 // Include protothreads
-#include "pt_cornell_rp2040_v1_3.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 // Macros for fixed-point arithmetic (faster than floating point)
 typedef signed int fix15 ;
@@ -122,7 +122,7 @@ volatile int corenum_1  ;
 volatile int global_counter = 0 ;
 
 // Semaphore
-struct pt_sem core_1_go, core_0_go ;
+semaphore_t core_1_go, core_0_go ;
 
 
 // This timer ISR is called on core 1
@@ -250,7 +250,7 @@ static PT_THREAD (protothread_core_1(struct pt *pt))
     PT_BEGIN(pt) ;
     while(1) {
         // Wait for signal
-        PT_SEM_SAFE_WAIT(pt, &core_1_go) ;
+        PT_SEM_SDK_WAIT(pt, &core_1_go) ;
         // Turn off LED
         gpio_put(LED, 0) ;
         // Increment global counter variable
@@ -261,7 +261,7 @@ static PT_THREAD (protothread_core_1(struct pt *pt))
         }
         printf("\n\n") ;
         // signal other core
-        PT_SEM_SAFE_SIGNAL(pt, &core_0_go) ;
+        PT_SEM_SDK_SIGNAL(pt, &core_0_go) ;
     }
     // Indicate thread end
     PT_END(pt) ;
@@ -274,7 +274,7 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
     PT_BEGIN(pt) ;
     while(1) {
         // Wait for signal
-        PT_SEM_SAFE_WAIT(pt, &core_0_go) ;
+        PT_SEM_SDK_WAIT(pt, &core_0_go) ;
         // Turn on LED
         gpio_put(LED, 1) ;
         // Increment global counter variable
@@ -285,7 +285,7 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
         }
         printf("\n\n") ;
         // signal other core
-        PT_SEM_SAFE_SIGNAL(pt, &core_1_go) ;
+        PT_SEM_SDK_SIGNAL(pt, &core_1_go) ;
     }
     // Indicate thread end
     PT_END(pt) ;
@@ -352,8 +352,8 @@ int main() {
     }
 
     // Initialize the intercore semaphores
-    PT_SEM_SAFE_INIT(&core_0_go, 1) ;
-    PT_SEM_SAFE_INIT(&core_1_go, 0) ;
+    sem_init(&core_0_go, 1, 1) ;
+    sem_init(&core_1_go, 0, 1) ;
 
     // Launch core 1
     multicore_launch_core1(core1_entry);
