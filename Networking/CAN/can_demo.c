@@ -19,7 +19,7 @@
 // CAN driver
 #include "can_driver.h"
 // Protothreads
-#include "pt_cornell_rp2040_v1.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 
 //                                   USER GLOBALS
