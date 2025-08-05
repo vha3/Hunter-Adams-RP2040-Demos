@@ -37,10 +37,11 @@
 #include "hardware/adc.h"
 #include "hardware/pio.h"
 #include "hardware/i2c.h"
+#include "hardware/clocks.h"
 // Include custom libraries
-#include "vga16_graphics.h"
+#include "vga16_graphics_v2.h"
 #include "mpu6050.h"
-#include "pt_cornell_rp2040_v1_3.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 // Arrays in which raw measurements will be stored
 fix15 acceleration[3], gyro[3];
@@ -206,6 +207,9 @@ void core1_entry() {
 }
 
 int main() {
+
+    // Overclock
+    set_sys_clock_khz(150000, true) ;
 
     // Initialize stdio
     stdio_init_all();
