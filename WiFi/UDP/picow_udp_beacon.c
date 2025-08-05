@@ -6,6 +6,7 @@
 
 // Standard libraries
 #include <string.h>
+#include "pico/sync.h"
 // LWIP libraries
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
@@ -14,7 +15,7 @@
 // Our header for making WiFi connection
 #include "connect.h"
 // Protothreads
-#include "pt_cornell_rp2040_v1_3.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 // Destination port and IP address
 #define UDP_PORT 1234
@@ -30,7 +31,7 @@ static struct udp_pcb *udp_rx_pcb;
 char received_data[BEACON_MSG_LEN_MAX] ;
 
 // Semaphore for signaling a new received message
-struct pt_sem new_message ;
+semaphore_t new_message ;
 
 static void udpecho_raw_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
                  const ip_addr_t *addr, u16_t port)
@@ -42,7 +43,7 @@ static void udpecho_raw_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     // Copy the contents of the payload
     memcpy(received_data, p->payload, BEACON_MSG_LEN_MAX) ;
     // Semaphore-signal a thread
-    PT_SEM_SAFE_SIGNAL(pt, &new_message) ;
+    PT_SEM_SDK_SIGNAL(pt, &new_message) ;
     // Reset the payload buffer
     memset(p->payload, 0, BEACON_MSG_LEN_MAX+1);
     // Free the PBUF
@@ -85,7 +86,7 @@ static PT_THREAD (protothread_receive(struct pt *pt))
 
   while(1) {
     // Wait on a semaphore
-    PT_SEM_SAFE_WAIT(pt, &new_message) ;
+    PT_SEM_SDK_WAIT(pt, &new_message) ;
 
     // Print received message
     printf("%s\n", received_data);
@@ -159,7 +160,7 @@ int main() {
     }
 
     // Initialize semaphore
-    PT_SEM_INIT(&new_message, 0) ;
+    sem_init(&new_message, 0, 1) ;
 
     //============================
     // UDP recenve ISR routines
