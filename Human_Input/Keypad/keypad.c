@@ -39,10 +39,11 @@
 #include "hardware/dma.h"
 #include "hardware/sync.h"
 #include "hardware/spi.h"
+#include "hardware/clocks.h"
 
 // VGA graphics library
-#include "vga16_graphics.h"
-#include "pt_cornell_rp2040_v1_3.h"
+#include "vga16_graphics_v2.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 
 // Keypad pin configurations
@@ -123,6 +124,9 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
 
 
 int main() {
+
+    // Overclock
+    set_sys_clock_khz(150000, true) ;
 
     // Initialize stdio
     stdio_init_all();
