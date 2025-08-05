@@ -20,7 +20,7 @@
 #include "hardware/pwm.h"
 #include "hardware/irq.h"
 
-#include "pt_cornell_rp2040_v1_3.h"
+#include "pt_cornell_rp2040_v1_4.h"
 
 // PWM wrap value and clock divide value
 // For a CPU rate of 125 MHz, this gives
