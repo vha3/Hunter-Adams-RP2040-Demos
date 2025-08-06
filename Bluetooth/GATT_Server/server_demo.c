@@ -41,15 +41,17 @@
 #include "pico/cyw43_arch.h"
 #include "pico/btstack_cyw43.h"
 #include "pico/stdlib.h"
+#include "pico/sync.h"
 
 // Hardware API's
 #include "hardware/timer.h"
 #include "hardware/irq.h"
 #include "hardware/spi.h"
 #include "hardware/sync.h"
+#include "hardware/clocks.h"
 
 // VGA driver
-#include "VGA/vga16_graphics.h"
+#include "VGA/vga16_graphics_v2.h"
 
 // GAP and GATT
 #include "GAP_Advertisement/gap_config.h"
@@ -104,10 +106,10 @@ static btstack_packet_callback_registration_t hci_event_callback_registration;
 static int characteristic_a_val = 0 ;
 
 // We send data as formatted strings (just like a serial console)
-static char characteristic_a_tx[100] ;
-static char characteristic_b_tx[100] ;
-static char characteristic_c_tx[100] ;
-static char characteristic_d_rx[100] ;
+static char characteristic_a_tx[255] ;
+static char characteristic_b_tx[255] ;
+static char characteristic_c_tx[255] ;
+static char characteristic_d_rx[255] ;
 static char characteristic_e_tx[5] ;
 static char characteristic_f_tx[2] ;
 
@@ -234,7 +236,7 @@ static PT_THREAD (protothread_ble(struct pt *pt))
 
     while(1) {
         // Wait for a bluetooth event (signaled by bluetooth write callback)
-        PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY) ;
+        PT_SEM_SDK_WAIT(pt, &BLUETOOTH_READY) ;
 
         // Update DDS frequency
         freq = atof(characteristic_b_tx) ;
@@ -312,6 +314,9 @@ static PT_THREAD (protothread_serial(struct pt *pt))
 } // timer thread
 
 int main() {
+    // Overclock
+    set_sys_clock_khz(150000, true) ;
+    
     // Initialize stdio
     stdio_init_all();
 

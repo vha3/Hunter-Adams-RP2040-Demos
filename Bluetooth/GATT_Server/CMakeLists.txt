@@ -1,3 +1,5 @@
+set(PICO_BOARD pico_w CACHE STRING "Board type")
+
 # cmake version
 cmake_minimum_required(VERSION 3.13)
 
@@ -15,7 +17,7 @@ add_executable( GATT_Server )
 target_sources( GATT_Server
                 PRIVATE
                 server_demo.c
-                VGA/vga16_graphics.c)
+                VGA/vga16_graphics_v2.c)
 
 # must match with pio filename and executable name from above
 pico_generate_pio_header(GATT_Server ${CMAKE_CURRENT_LIST_DIR}/VGA/hsync.pio)
@@ -26,6 +28,7 @@ pico_generate_pio_header(GATT_Server ${CMAKE_CURRENT_LIST_DIR}/VGA/rgb.pio)
 
 target_link_libraries(GATT_Server
     pico_stdlib
+    pico_sync
     pico_btstack_ble
     pico_btstack_cyw43
     pico_cyw43_arch_none

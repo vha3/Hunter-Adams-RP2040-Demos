@@ -16,7 +16,7 @@
 #include "btstack_debug.h"
 
 #include "server_demo_gattfile.h"
-#include "Protothreads/pt_cornell_rp2040_v1_3.h"
+#include "Protothreads/pt_cornell_rp2040_v1_4.h"
 
 
 
@@ -103,7 +103,7 @@ char characteristic_e[] = "LED Status and Control" ;
 char characteristic_f[] = "Color Selection" ;
 
 // Protothreads semaphore
-struct pt_sem BLUETOOTH_READY ;
+semaphore_t BLUETOOTH_READY ;
 
 // Callback functions for ATT notifications on characteristics
 static void characteristic_a_callback(void * context){
@@ -229,7 +229,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 			att_server_register_can_send_now_callback(&instance->callback_b, instance->con_handle) ;
 		}
 		// Alert the application of a bluetooth RX
-        PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
+        PT_SEM_SDK_SIGNAL(pt, &BLUETOOTH_READY) ;
 	}
 
 	// Enable/disable notificatins
@@ -259,7 +259,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 			att_server_register_can_send_now_callback(&instance->callback_d, instance->con_handle) ;
 		}
 		// Alert the application of a bluetooth RX
-        PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
+        PT_SEM_SDK_SIGNAL(pt, &BLUETOOTH_READY) ;
 	}
 
 	// Write characteristic value
@@ -272,7 +272,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 			service_object.characteristic_e_value[buffer_size] = 0 ;
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
 			// Alert the application of a bluetooth RX
-			PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
+			PT_SEM_SDK_SIGNAL(pt, &BLUETOOTH_READY) ;
 		}
 		else if (!strcmp(buffer, "ON")) {
 			memset(service_object.characteristic_e_value, 0, sizeof(service_object.characteristic_e_value)) ;
@@ -280,7 +280,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 			service_object.characteristic_e_value[buffer_size] = 0 ;
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 			// Alert the application of a bluetooth RX
-			PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
+			PT_SEM_SDK_SIGNAL(pt, &BLUETOOTH_READY) ;
 		}
 	}
 
@@ -294,7 +294,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 			// Null-terminate the string
 			service_object.characteristic_f_value[buffer_size] = 0 ;
 			// Alert the application of a bluetooth RX
-        	PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
+        	PT_SEM_SDK_SIGNAL(pt, &BLUETOOTH_READY) ;
 		}
 	}
 
@@ -310,7 +310,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 void custom_service_server_init(char * a_ptr, char * b_ptr, char * c_ptr, char * d_ptr, char * e_ptr, char * f_ptr){
 
 	// Initialize the semaphore
-	PT_SEM_SAFE_INIT(&BLUETOOTH_READY, 0) ;
+	sem_init(&BLUETOOTH_READY, 0, 1) ;
 
 	// Pointer to our service object
 	custom_service_t * instance = &service_object ;
