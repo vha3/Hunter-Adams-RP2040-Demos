@@ -1,3 +1,5 @@
+set(PICO_BOARD pico_w CACHE STRING "Board type")
+
 # cmake version
 cmake_minimum_required(VERSION 3.13)
 
@@ -18,6 +20,7 @@ target_sources(GATT_Client
 
 target_link_libraries(GATT_Client
     pico_stdlib
+    pico_sync
     pico_btstack_ble
     pico_btstack_cyw43
     pico_cyw43_arch_none

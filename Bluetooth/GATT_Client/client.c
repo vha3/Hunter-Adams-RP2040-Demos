@@ -10,8 +10,9 @@
 #include "btstack.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
+#include "pico/sync.h"
 #include "hardware/sync.h"
-#include "pt_cornell_rp2040_v1_3_client.h"
+#include "pt_cornell_rp2040_v1_4_client.h"
 
 // Show/conceal debugging information
 #if 0
@@ -86,7 +87,7 @@ static bool listener_registered;
 static gatt_client_notification_t notification_listener;
 
 // Protothreads semaphore
-struct pt_sem characteristics_discovered ;
+semaphore_t characteristics_discovered ;
 
 // Counts characteristics in ATT state machine
 int k = 0 ;
@@ -181,7 +182,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             // Make sure notifications are labeled as on for this characteristic
             // notifications_enabled[which_characteristic] = 1 ;
             // Semaphore-signal the protothread which will refresh values in the UI
-            PT_SEM_SAFE_SIGNAL(pt, &characteristics_discovered) ;
+            PT_SEM_SDK_SIGNAL(pt, &characteristics_discovered) ;
         }
         // Exit the callback
         return;
@@ -415,7 +416,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                         // If so, move to next state
                         else {
                             // Signal thread that all characteristics have been acquired
-                            PT_SEM_SAFE_SIGNAL(pt, &characteristics_discovered) ;
+                            PT_SEM_SDK_SIGNAL(pt, &characteristics_discovered) ;
 
                             // Transition to an idle state
                             state = TC_W4_READY ;
@@ -469,7 +470,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     // If so, move to next state
                     else {
                         // Signal thread that all characteristics have been acquired
-                        PT_SEM_SAFE_SIGNAL(pt, &characteristics_discovered) ;
+                        PT_SEM_SDK_SIGNAL(pt, &characteristics_discovered) ;
 
                         // Transition to an idle state
                         state = TC_W4_READY ;
@@ -606,7 +607,7 @@ static PT_THREAD (protothread_client(struct pt *pt))
     while(1) {
 
         // Wait to be signalled by the GATT state machine
-        PT_SEM_SAFE_WAIT(pt, &characteristics_discovered) ;
+        PT_SEM_SDK_WAIT(pt, &characteristics_discovered) ;
 
         // Save cursor position
         printf("\033[s") ;
@@ -757,7 +758,7 @@ int main() {
     printf("\033[?25l") ;
 
     // Initialize the semaphore
-    PT_SEM_SAFE_INIT(&characteristics_discovered, 0) ;
+    sem_init(&characteristics_discovered, 0, 1) ;
 
     // initialize CYW43 driver architecture (will enable BT if/because CYW43_ENABLE_BLUETOOTH == 1)
     if (cyw43_arch_init()) {
