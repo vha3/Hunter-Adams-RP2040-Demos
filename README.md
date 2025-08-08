@@ -13,7 +13,7 @@ This is a collection of RP2040 examples created and assembled for ECE 4760 at Co
 > - [Alternative Lab 2](https://vanhunteradams.com/Pico/Animal_Movement/Boids_Lab.html): Animating murmurations of starlings
 > - [Alternative Lab 3](https://vanhunteradams.com/Pico/ReactionWheel/ReactionWheel.html): PID control of an inverted pendulum with a reaction wheel.
 
-As of 6/30/2025, this repository has been refactored such that **every demo is a standalone project.** As such, you can download/clone this directory and import any project using the Raspberry Pi Pico VSCode extension and it will work. I'm generating documentation that illustrates each step and will post it shortly. 
+As of 6/30/2025, this repository has been refactored such that **every demo is a standalone project.** As such, you can download/clone this directory and import any project using the Raspberry Pi Pico VSCode extension and it will work. For detailed instructions, please [see here](https://vanhunteradams.com/Pico/CourseMaterials/Building_Demos.html). 
 
 
 You may also be interested in some meta-information about this class:
