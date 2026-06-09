@@ -27,7 +27,7 @@
 // ==========================================
 // === VGA graphics library
 // ==========================================
-#include "vga16_graphics_v2.h"
+#include "vga16_graphics_v3.h"
 #include <stdio.h>
 #include <stdlib.h>
 // #include <math.h>
@@ -39,7 +39,7 @@
 #include "hardware/clocks.h"
 
 // ==========================================
-// === protothreads globals
+// === protothreads globals ===
 // ==========================================
 #include "hardware/sync.h"
 #include "hardware/timer.h"
@@ -51,7 +51,7 @@
 // restart graphics flag
 bool restart_graphics = true ;
 // shared variable for erase color
-int bkgnd_color = 0 ;
+short bkgnd_color = 0 ;
 
 // ==================================================
 // === graphics demo -- RUNNING on core 0
@@ -59,7 +59,7 @@ int bkgnd_color = 0 ;
 static PT_THREAD (protothread_graphics(struct pt *pt)) {
     PT_BEGIN(pt);
     // the protothreads interval timer
-    PT_INTERVAL_INIT() ;
+    PT_INTERVAL_INIT( ) ;
 
     static uint64_t draw_time ;
     static int time ;
@@ -79,205 +79,106 @@ static PT_THREAD (protothread_graphics(struct pt *pt)) {
     fillRect(435, 0, 176, 50, GREEN); // green box
 
     // Write some text
-    setTextColor(WHITE) ;
-    setCursor(65, 0) ;
-    setTextSize(1) ;
-    writeString("Raspberry Pi Pico") ;
-    setCursor(65, 10) ;
-    writeString("Graphics primitives demo") ;
-    setCursor(65, 20) ;
-    writeString("Hunter Adams vha3@cornell.edu") ;
-    setCursor(65, 30) ;
-    writeString("Bruce Land brl4@cornell.edu") ;
+    drawTextTiny8(65, 0, "Raspberry Pi Pico", WHITE, BLUE) ;
+    drawTextGLCD(65, 10, "Graphics primitives", WHITE, BLUE) ;
+    drawTextGLCD(65, 20, "Hunter Adams vha3@cornell.edu", WHITE, BLUE) ;
+    drawTextGLCD(65, 30, "Bruce Land brl4@cornell.edu", WHITE, BLUE) ;
     //
-    setCursor(255, 10) ;
-    setTextColor(BLACK) ;
-    writeStringBig("Test vga_graphics_v2") ;
+    drawTextVGA437(255, 10, "Test vga_graphics_v3", BLACK, YELLOW);
     //
-    setCursor(438, 10) ;
-    setTextColor(BLACK) ;
-    setTextSize(1) ;
-    writeString("Protothreads rp2040/2350 1.4") ;
-    setCursor(438, 20) ;
-    writeString("CPU clock 150 Mhz") ;
-    setCursor(438, 30) ;
-    writeString("vga16_v2 driver") ;
-    setTextColor(WHITE) ;
 
-    // Setup a 1Hz timer
-    //static struct repeating_timer timer;
-    ////add_repeating_timer_ms(-1000, repeating_timer_callback, NULL, &timer);
+    drawTextGLCD(438, 10, "Protothreads rp2040/2350 1.4", BLACK, GREEN) ;
+    drawTextGLCD(438, 20, "CPU clock 150 Mhz", BLACK, GREEN) ;
+    drawTextGLCD(438, 30, "vga16_v3 driver", BLACK, GREEN) ;
+    drawTextGLCD(438, 40, "Double Buffer on rp2350 ONLY", BLACK, GREEN) ;
 
      char video_buffer[64];
-    setTextColor2(WHITE, BLACK) ;
-    setTextSize(1) ;
+     // The color pallette
+    //setTextColor2(WHITE, BLACK) ;
+    //setTextSize(1) ;
     for (int i=0; i<4; i++) {
       for (int j=0; j<4; j++){
-        fillRect(i*70+20, 150+j*70, 60, 60, i+4*j);  
-        setCursor(i*70+20, 150+j*70) ; 
+        fillRect(i*70+20, 150+j*70, 60, 49, i+4*j);  
+        //setCursor(i*70+20, 150+j*70) ; 
         sprintf(video_buffer, "%2d", i+4*j);
-        writeString(video_buffer) ;
+        drawTextGLCD(i*70+20, 150+j*70, video_buffer, WHITE, BLACK);
       }
     }
+    setTextColor2(WHITE, BLACK) ;
+    setTextSize(1) ;
     // first row of colors
-    setCursor(0*70+20, 200+0*70) ; 
-    writeString("BLACK") ;
-    setCursor(1*70+20, 200+0*70) ; 
-    writeString("DARK_GREEN") ;
-    setCursor(2*70+20, 200+0*70) ; 
-    writeString("MED_GREEN") ;
-    setCursor(3*70+20, 200+0*70) ; 
-    writeString("GREEN") ;
-    // second row of colors
-    setCursor(0*70+20, 200+1*70) ; 
-    writeString("DARK_BLUE") ;
-    setCursor(1*70+20, 200+1*70) ; 
-    writeString("BLUE") ;
-    setCursor(2*70+20, 200+1*70) ; 
-    writeString("LIGHT_BLUE") ;
-    setCursor(3*70+20, 200+1*70) ; 
-    writeString("CYAN") ;
-    // thrid row of colors
-    setCursor(0*70+20, 200+2*70) ; 
-    writeString("RED") ;
-    setCursor(1*70+20, 200+2*70) ; 
-    writeString("DARK_ORANGE") ;
-    setCursor(2*70+20, 200+2*70) ; 
-    writeString("ORANGE") ;
-    setCursor(3*70+20, 200+2*70) ; 
-    writeString("YELLOW") ;
-    // fourth row of colors
-    setCursor(0*70+20, 200+3*70) ; 
-    writeString("MAGENTA") ;
-    setCursor(1*70+20, 200+3*70) ; 
-    writeString("PINK") ;
-    setCursor(2*70+20, 200+3*70) ; 
-    writeString("LIGHT_PINK") ;
-    setCursor(3*70+20, 200+3*70) ; 
-    writeString("WHITE") ;
+    //setCursor(0*70+20, 200+0*70) ; 
+    //writeString("BLACK") ;
+    drawTextGLCD(0*70+20, 200+0*70, "BLACK", WHITE, BLACK);
+    drawTextGLCD(1*70+20, 200+0*70, "DARK_GREEN", WHITE, BLACK);
+    drawTextGLCD(2*70+20, 200+0*70, "MED_GREEN", WHITE, BLACK);
+    drawTextGLCD(3*70+20, 200+0*70, "GREEN", WHITE, BLACK);
+    drawTextGLCD(0*70+20, 200+1*70, "DARK_BLUE", WHITE, BLACK);
+    drawTextGLCD(1*70+20, 200+1*70, "BLUE", WHITE, BLACK);
+    drawTextGLCD(2*70+20, 200+1*70, "LIGHT_BLUE", WHITE, BLACK);
+    drawTextGLCD(3*70+20, 200+1*70, "CYAN", WHITE, BLACK);
 
-    // small font
+    drawTextGLCD(0*70+20, 200+2*70, "RED", WHITE, BLACK);
+    drawTextGLCD(1*70+20, 200+2*70, "DARK_ORANGE", WHITE, BLACK);
+    drawTextGLCD(2*70+20, 200+2*70, " ORANGE", WHITE, BLACK);
+    drawTextGLCD(3*70+20, 200+2*70, "YELLOW", WHITE, BLACK);
+    drawTextGLCD(0*70+20, 200+3*70, "MAGENTA", WHITE, BLACK);
+    drawTextGLCD(1*70+20, 200+3*70, "PINK", WHITE, BLACK);
+    drawTextGLCD(2*70+20, 200+3*70, "LIGHT_PINK", WHITE, BLACK);
+    drawTextGLCD(3*70+20, 200+3*70, "WHITE", WHITE, BLACK);
+    
+    // GLCD font
     int line_spacing = 8;
     int line_base = 150 ;
-    setCursor(330, line_base) ; 
-    setTextColor2(GREEN, BLACK);
-    writeString("GLCD 5x7 font: size=1");
-
-    setCursor(330, line_base+line_spacing) ; 
-    setTextColor2(RED, BLACK);
-    writeString("1234567890~!@#$%^&*()");
-
-    setCursor(330, line_base+line_spacing*2) ; 
-    setTextColor2(ORANGE, BLACK);
-    writeString("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-
-    setTextColor2(LIGHT_BLUE, BLACK);
-    setCursor(330, line_base+line_spacing*3) ; 
-    writeString("abcdefghijklmnopqrstuvwxyz");
-
-    setCursor(330, line_base+line_spacing*4) ; 
-    setTextColor2(PINK, BLACK);
-    writeString("`-+=;:,./?|");
-
-    // small bold font
+    int line_start = 330 ;
+    drawTextGLCD(line_start, line_base,"--GLCD 5x7 font-- test truncation at the edge of screen", WHITE,  BLACK );
+    drawTextGLCD(line_start, line_base+line_spacing, "1234567890~!@#$%^&*()", WHITE, BLACK);
+    drawTextGLCD(line_start, line_base+2*line_spacing, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", WHITE, BLACK);
+    drawTextGLCD(line_start, line_base+3*line_spacing, "abcdefghijklmnopqrstuvwxyz", WHITE, BLACK);
+    drawTextGLCD(line_start, line_base+4*line_spacing, "`-+=;:,./?|", WHITE, BLACK);
+    // ASCII font
     line_spacing = 8;
+    line_base = 430 ;
+    line_start = 30 ;
+    drawTextAscii(line_start, line_base,"--ASCII 5x7 font--", WHITE,  BLACK );
+    drawTextAscii(line_start, line_base+line_spacing, "1234567890~!@#$%^&*()", WHITE, BLACK);
+    drawTextAscii(line_start, line_base+2*line_spacing, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", WHITE, BLACK);
+    drawTextAscii(line_start, line_base+3*line_spacing, "abcdefghijklmnopqrstuvwxyz", WHITE, BLACK);
+    drawTextAscii(line_start, line_base+4*line_spacing, "`-+=;:,./?|", WHITE, BLACK);
+
+    // Tiny8
+    line_spacing = 9;
     line_base = 200 ;
-    setCursor(330, line_base) ; 
-    setTextColor2(GREEN, BLACK);
-    writeStringBold("GLCD 5x7 BOLD font: size=1");
+    drawTextTiny8(330, line_base,"--Tiny8 8x8 font-- test truncation at edge of screen", GREEN,  BLACK );
+    drawTextTiny8(330, line_base+line_spacing, "1234567890~!@#$%^&*()", GREEN, BLACK);
+    drawTextTiny8(330, line_base+2*line_spacing, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", GREEN, BLACK);
+    drawTextTiny8(330, line_base+3*line_spacing, "abcdefghijklmnopqrstuvwxyz", GREEN, BLACK);
+    drawTextTiny8(330, line_base+4*line_spacing, "`-+=;:,./?|", GREEN, BLACK);
 
-    setCursor(330, line_base+line_spacing) ; 
-    setTextColor2(RED, BLACK);
-    writeStringBold("1234567890~!@#$%^&*()");
-
-    setCursor(330, line_base+line_spacing*2) ; 
-    setTextColor2(ORANGE, BLACK);
-    writeStringBold("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-
-    setTextColor2(LIGHT_BLUE, BLACK);
-    setCursor(330, line_base+line_spacing*3) ; 
-    writeStringBold("abcdefghijklmnopqrstuvwxyz");
-
-    setCursor(330, line_base+line_spacing*4) ; 
-    setTextColor2(PINK, BLACK);
-    writeStringBold("`-+=;:,./?|");
-
-    // small bold font size=2
-    line_spacing = 16;
-    line_base = 250 ;
-    setTextSize(2);
-    setCursor(300, line_base) ; 
-    setTextColor2(GREEN, BLACK);
-    writeString("GLCD 5x7 font: size=2");
-
-    setCursor(300, line_base+line_spacing) ; 
-    setTextColor2(RED, BLACK);
-    writeString("1234567890~!@#$%^&*()");
-
-    setCursor(300, line_base+line_spacing*2) ; 
-    setTextColor2(ORANGE, BLACK);
-    writeString("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-
-    setTextColor2(LIGHT_BLUE, BLACK);
-    setCursor(300, line_base+line_spacing*3) ; 
-    writeString("abcdefghijklmnopqrstuvwxyz");
-
-    setCursor(300, line_base+line_spacing*4) ; 
-    setTextColor2(PINK, BLACK);
-    writeString("`-+=;:,./?|");
-
-    // big font
+    // VGA font
     line_spacing = 15;
-    line_base = 350 ;
-    setTextSize(1);
-    setCursor(330, line_base) ; 
-    setTextColor2(GREEN, BLACK);
-    writeStringBig("VGA437 8x16 font: \x13 only one size \x13");
-
-    setCursor(330, line_base+line_spacing) ; 
-    setTextColor2(RED, BLACK);
-    writeStringBig("1234567890~!@#$%^&*()");
-
-    setCursor(330, line_base+line_spacing*2) ; 
-    setTextColor2(ORANGE, BLACK);
-    writeStringBig("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-
-    setTextColor2(LIGHT_BLUE, BLACK);
-    setCursor(330, line_base+line_spacing*3) ; 
-    writeStringBig("abcdefghijklmnopqrstuvwxyz");
-
-    setCursor(330, line_base+line_spacing*4) ; 
-    setTextColor2(PINK, BLACK);
-    writeStringBig("`-+=;:,./?|");
+    line_base = 250 ;
+    drawTextVGA437(330, line_base, "--VGA437 8x16 font-- test truncation at edge of screen", CYAN, BLACK);
+    drawTextVGA437(330, line_base+line_spacing, "1234567890~!@#$%^&*()", CYAN, BLACK);
+    drawTextVGA437(330, line_base+2*line_spacing, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", CYAN, BLACK);
+    drawTextVGA437(330, line_base+3*line_spacing, "abcdefghijklmnopqrstuvwxyz", CYAN, BLACK);
+    drawTextVGA437(330, line_base+4*line_spacing, "`-+=;:,./?|", CYAN, BLACK);
     
-    drawHLine(75, 430, 50, WHITE );
-    setCursor(5, 430) ; 
-    setTextColor2(WHITE, BLACK);
-    writeStringBold("drawHLine");
+    // Arial 24
+    line_spacing = 26;
+    line_base = 330 ;
+    drawTextArial24(320, line_base, "-Arial24 16x24-test truncation", YELLOW, BLACK);
+    drawTextArial24(320, line_base+24, "AaBbGg 123 !@#", YELLOW, BLACK);
     //
-    drawLine(75, 445, 120, 452, WHITE);
-    setCursor(5, 440) ; 
-    setTextColor2(WHITE, BLACK);
-    writeStringBold("drawLine");
+    drawTextGrotesk32(320, 385, "-Grotesk32 16x32-test trunc", WHITE, BLACK);
+    drawTextGrotesk32(320, 417, "AaBbYy 123 !@#{}", WHITE, BLACK);
     //
-    drawVLine(75, 450, 25, WHITE );
-    setCursor(5, 450) ; 
-    setTextColor2(WHITE, BLACK);
-    writeStringBold("drawVLine");
     //
-    crosshair(220, 454, GREEN);
-    drawPixel(222, 458, GREEN) ;
-    setCursor(150, 450) ; 
-    setTextColor2(WHITE, BLACK);
-    writeStringBold("drawPixel");
-    //
-    setCursor(340, 430) ; 
-    setTextColor2(WHITE, BLACK);
-    writeStringBold("Serial cmd: (e)rase to color (0-15)");
-    setCursor(340, 440) ; 
-    setTextColor2(WHITE, BLACK);
-    writeStringBold("Serial cmd: (r)estart graphics");
- 
+    if (get_buffer_type() == 1)  drawTextGLCD(270, 30, "double buffer 60 fps", BLACK, YELLOW) ;
+    if (get_buffer_type() == 2)  drawTextGLCD(270, 30, "double buffer 30 fps", BLACK, YELLOW) ;
+    if (get_buffer_type() == 3)  drawTextGLCD(270, 30, "no double buffer    ", BLACK, YELLOW) ;
+        
+    copy_buffer0to1();
 
     while(true) {
 
@@ -294,52 +195,32 @@ static PT_THREAD (protothread_graphics(struct pt *pt)) {
         // clear the row of shapes
         // during the vertical interval
         // this syncs the thread to the frame rate
-        while(gpio_get(VSYNC)){};
-        // DOES NOT CHECK for an edge, so very fast drawing
-        // MAY need a 1 mSec yield at the end
-        //PT_YIELD_UNTIL(pt, !gpio_get(VSYNC));
-       // draw_time = PT_GET_TIME_usec();
-        // clear takes 200 uSec
-        clearRect(0, 50, 640, 150, (short)bkgnd_color);
-
+        // this syncs the thread to the buffer swap
+        PT_YIELD_UNTIL(pt, draw_start_signal());
+        
         draw_time = PT_GET_TIME_usec();
+        // clear is fast
+        clearRect(0, 50, 640, 150, bkgnd_color);
 
         // A row of graphics primitives
         fillCircle(filled_circle_x, 100, 45, filled_circle_color);
-        setCursor(filled_circle_x-35, 100) ; 
-        setTextColor2(WHITE, BLACK);
-        writeStringBold("fillCircle");
-
+        
         //
         drawCircle(circle_x, 100, 45, circle_color);
         drawCircle(circle_x+1, 100, 45, circle_color);
-        drawCircle(circle_x, 100, 44, circle_color);
-        setCursor(circle_x-35, 100) ; 
-        setTextColor2(WHITE, BLACK);
-        writeStringBold("drawCircle");
+        drawCircle(circle_x, 100, 44, circle_color);  
         //
         fillRect(filled_rect_x, 52, 85, 85, filled_rect_color) ;
-        setCursor(filled_rect_x+5, 100) ; 
-        setTextColor2(WHITE, BLACK);
-        writeStringBold("fillRect");
         //
         drawRect(rect_x, 52, 85, 85, rect_color) ;
-        setCursor(rect_x+5, 100) ; 
-        setTextColor2(WHITE, BLACK);
-        writeStringBold("drawRect");
+        
         //
-        //
-        fillRoundRect(filled_round_rect_x, 60, 86, 60, 5, filled_round_rect_color) ;
-        setCursor(filled_round_rect_x+1, 100) ; 
-        setTextColor2(WHITE, BLACK);
-        writeStringBold("fillRoundRect");
+        fillRoundRect(filled_round_rect_x, 60, 86, 70, 5, filled_round_rect_color) ;
+        
         //
         //drawRoundRect(round_rect_x+1, 53, 85, 83, 10, round_rect_color) ;
         drawRoundRect(round_rect_x, 70, 86, 60, 5, round_rect_color) ;
-        setCursor(round_rect_x+1, 100) ; 
-        setTextColor2(WHITE, BLACK);
-        writeStringBold("drawRoundRect");
-       // drawRoundRect(round_rect_x+2, 54, 81, 83, 10, round_rect_color) ;
+        
         // upate position
         filled_circle_x += 2 ;
         circle_x += 3 ;
@@ -351,7 +232,7 @@ static PT_THREAD (protothread_graphics(struct pt *pt)) {
         // range check on position
         if(filled_circle_x > right_side) {
           filled_circle_x = 0;
-          filled_circle_color = rand() & 0xf ;
+          filled_circle_color = (rand() & 0x7) + 8 ;
         }
         if(circle_x > right_side) {
           circle_x = 0;
@@ -359,7 +240,7 @@ static PT_THREAD (protothread_graphics(struct pt *pt)) {
         }
         if(filled_rect_x > right_side) {
           filled_rect_x = 0;
-          filled_rect_color = rand() & 0xf ;
+          filled_rect_color = (rand() & 0x7) + 8 ;
         }
         if(rect_x > right_side) {
           rect_x = 0;
@@ -375,27 +256,27 @@ static PT_THREAD (protothread_graphics(struct pt *pt)) {
         }
         
         // read back a pixel and show it
-        uint8_t pix_color = readPixel(320,100) ;
+        uint8_t pix_color = readPixel(320,120) ;
         // now mark the pixel
-        crosshair(320, 100, WHITE);
+        crosshair(320, 120, WHITE);
         // and draw a string
-        setCursor(320, 130) ;
-        if(pix_color>5)  setTextColor2(BLACK, pix_color) ;
-        else  setTextColor2(WHITE, pix_color) ;
-        writeStringBig("Pixel (320,100) color") ;
+        if(pix_color>5)  
+          drawTextVGA437(320, 121, " Pixel (320,120) color", BLACK, pix_color);
+        else  
+          drawTextVGA437(320, 121, " Pixel (320,120) color", WHITE, pix_color);
+      
+        
         //
-        drawVLine(320,100,30, WHITE) ;
-        drawVLine(321,100,30, BLACK) ;
-        drawVLine(319,100,30, BLACK) ;
+        drawVLine(320,121,10, WHITE) ;
+        drawVLine(321,121,10, BLACK) ;
+        drawVLine(319,121,10, BLACK) ;
 
         sprintf(video_buffer, "Draw Time %4.1f mSec", (float)(PT_GET_TIME_usec()-draw_time)/1000);
-        setTextColor2(WHITE, BLACK) ;
-        setCursor(260, 450);
-        writeStringBig(video_buffer) ;
+        drawTextVGA437(260, 450, video_buffer, WHITE, BLACK) ;
 
         // Thread is paced by the Vsync edge
-        PT_YIELD_usec(20000) ;
-        //PT_YIELD(pt);
+       // PT_YIELD_usec(20000) ;
+       // PT_YIELD(pt);
    }
    PT_END(pt);
 } // graphics thread
@@ -448,15 +329,16 @@ static PT_THREAD (protothread_serial(struct pt *pt))
         serial_write ;
 
         // spawn a thread to do the non-blocking serial read
-        serial_read ;
+         serial_read ;
         // convert input string to number
         //sscanf(pt_serial_in_buffer,"%d %d", &test_in1, &test_in2) ;
         short color;
         if(pt_serial_in_buffer[0]=='e'){
-          sscanf(pt_serial_in_buffer+1,"%d\r", &bkgnd_color) ;
+          sscanf(pt_serial_in_buffer+1,"%d ", &bkgnd_color) ;
           // wipe the whole frame
           e_time = PT_GET_TIME_usec();
-          clearLowFrame(0, (short)bkgnd_color) ;
+          clearLowFrame(0, bkgnd_color) ;
+          copy_buffer_to_other() ;
           printf( "Erase Time %lld uSec\n\r", (PT_GET_TIME_usec() - e_time));
         }
 
@@ -488,8 +370,12 @@ void core1_main(){
 // === core 0 main
 // ========================================
 int main(){
+  // bump up voltage for overclocking
+  // rp2350 will run at 300 Mhz at 1.3 volt
+  // vreg_set_voltage (VREG_VOLTAGE_1_30);
+  //
   // set the clock
-  set_sys_clock_khz(150000, true);
+  set_sys_clock_khz(150000, true); // 
 
   // start the serial i/o
   stdio_init_all() ;
