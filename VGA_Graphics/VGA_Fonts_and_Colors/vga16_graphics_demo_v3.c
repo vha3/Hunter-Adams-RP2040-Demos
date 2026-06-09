@@ -27,7 +27,7 @@
 // ==========================================
 // === VGA graphics library
 // ==========================================
-#include "vga16_graphics_v3.h"
+#include "VGA/vga16_graphics_v3.h"
 #include <stdio.h>
 #include <stdlib.h>
 // #include <math.h>

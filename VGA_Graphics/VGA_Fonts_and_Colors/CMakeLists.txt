@@ -18,7 +18,7 @@ pico_generate_pio_header(VGA_Graphics_Fonts_and_Colors ${CMAKE_CURRENT_LIST_DIR}
 pico_generate_pio_header(VGA_Graphics_Fonts_and_Colors ${CMAKE_CURRENT_LIST_DIR}/VGA/rgb.pio)
 
 # must match with executable name and source file names
-target_sources(VGA_Graphics_Fonts_and_Colors PRIVATE vga16_graphics_demo.c VGA/vga16_graphics_v3.c)
+target_sources(VGA_Graphics_Fonts_and_Colors PRIVATE vga16_graphics_demo_v3.c VGA/vga16_graphics_v3.c)
 
 # must match with executable name
 target_link_libraries(VGA_Graphics_Fonts_and_Colors PRIVATE 
