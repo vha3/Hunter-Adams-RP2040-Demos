@@ -26,6 +26,9 @@ int main() {
     printf("GPIO interrupt\n");
 
     // Configure GPIO interrupt
+    gpio_init(2) ;
+    gpio_set_dir(2, GPIO_IN) ;
+    gpio_pull_down(2) ;
     gpio_set_irq_enabled_with_callback(2, GPIO_IRQ_EDGE_RISE, true, &gpio_callback);
 
     // Set GPIO's 3 to output
