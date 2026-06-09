@@ -25,7 +25,7 @@
  */
 
 // Include VGA graphics library
-#include "vga16_graphics_v2.h"
+#include "VGA/vga16_graphics_v3.h"
 // Include standard libraries
 #include <stdio.h>
 #include <stdlib.h>
