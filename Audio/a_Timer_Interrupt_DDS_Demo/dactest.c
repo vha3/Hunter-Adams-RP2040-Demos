@@ -24,7 +24,7 @@
 
 // Low-level alarm infrastructure we'll be using
 #define ALARM_NUM 0
-#define ALARM_IRQ TIMER_IRQ_0
+#define ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, ALARM_NUM)
 
 //DDS parameters
 #define two32 4294967296.0 // 2^32 
@@ -32,7 +32,7 @@
 #define DELAY 20 // 1/Fs (in microseconds)
 // the DDS units:
 volatile unsigned int phase_accum_main;
-volatile unsigned int phase_incr_main = (800.0*two32)/Fs ;//
+volatile unsigned int phase_incr_main = (800.0*two32)/Fs ;
 
 // SPI data
 uint16_t DAC_data ; // output value

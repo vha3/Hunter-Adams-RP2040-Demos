@@ -26,7 +26,7 @@
 
 // Low-level alarm infrastructure we'll be using
 #define ALARM_NUM 0
-#define ALARM_IRQ TIMER_IRQ_0
+#define ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, ALARM_NUM)
 
 // Macros for fixed-point arithmetic (faster than floating point)
 typedef signed int fix15 ;

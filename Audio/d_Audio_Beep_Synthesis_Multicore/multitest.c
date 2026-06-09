@@ -46,8 +46,8 @@ typedef signed int fix15 ;
 // Alarm infrastructure that we'll be using
 #define ALARM_NUM_0 0
 #define ALARM_NUM_1 1
-#define ALARM_IRQ_0 TIMER_IRQ_0
-#define ALARM_IRQ_1 TIMER_IRQ_1
+#define ALARM_IRQ_0 timer_hardware_alarm_get_irq_num(timer_hw, ALARM_NUM_0)
+#define ALARM_IRQ_1 timer_hardware_alarm_get_irq_num(timer_hw, ALARM_NUM_1)
 
 //DDS parameters
 #define two32 4294967296.0 // 2^32 
