@@ -26,7 +26,7 @@
  *  - 153.6 kBytes of RAM (for pixel color data)
  *
  */
-#include "vga16_graphics_v2.h"
+#include "VGA/vga16_graphics_v3.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
