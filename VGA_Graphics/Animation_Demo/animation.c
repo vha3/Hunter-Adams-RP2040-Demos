@@ -22,7 +22,7 @@
  */
 
 // Include the VGA grahics library
-#include "vga16_graphics_v2.h"
+#include "VGA/vga16_graphics_v3.h"
 // Include standard libraries
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +32,7 @@
 #include "pico/stdlib.h"
 #include "pico/divider.h"
 #include "pico/multicore.h"
+#include "pico/sync.h"
 // Include hardware libraries
 #include "hardware/pio.h"
 #include "hardware/dma.h"
@@ -74,6 +75,9 @@ fix15 boid1_x ;
 fix15 boid1_y ;
 fix15 boid1_vx ;
 fix15 boid1_vy ;
+
+// Create a semaphore
+semaphore_t draw_semaphore ;
 
 // Create a boid
 void spawnBoid(fix15* x, fix15* y, fix15* vx, fix15* vy, int direction)
@@ -133,7 +137,7 @@ static PT_THREAD (protothread_serial(struct pt *pt))
     // wait for 0.1 sec
     PT_YIELD_usec(1000000) ;
     // announce the threader version
-    sprintf(pt_serial_out_buffer, "Protothreads RP2040 v1.0\n\r");
+    sprintf(pt_serial_out_buffer, "Protothreads RP2040 v1.4\n\r");
     // non-blocking write
     serial_write ;
       while(1) {
@@ -159,28 +163,22 @@ static PT_THREAD (protothread_anim(struct pt *pt))
     // Mark beginning of thread
     PT_BEGIN(pt);
 
-    // Variables for maintaining frame rate
-    static int begin_time ;
-    static int spare_time ;
-
     // Spawn a boid
     spawnBoid(&boid0_x, &boid0_y, &boid0_vx, &boid0_vy, 0);
 
     while(1) {
-      // Measure time at start of thread
-      begin_time = time_us_32() ;      
-      // erase boid
-      drawRect(fix2int15(boid0_x), fix2int15(boid0_y), 2, 2, BLACK);
+      // Wait for the signal that the buffer's changed
+      PT_YIELD_UNTIL(pt, draw_start_signal()) ;
+      // Clear the buffer
+      clearLowFrame(0, BLACK);
+      // Signal core 1 that it can start drawing
+      PT_SEM_SDK_SIGNAL(pt, &draw_semaphore) ;
       // update boid's position and velocity
       wallsAndEdges(&boid0_x, &boid0_y, &boid0_vx, &boid0_vy) ;
       // draw the boid at its new position
-      drawRect(fix2int15(boid0_x), fix2int15(boid0_y), 2, 2, color); 
+      fillCircle(fix2int15(boid0_x), fix2int15(boid0_y), 15, color); 
       // draw the boundaries
       drawArena() ;
-      // delay in accordance with frame rate
-      spare_time = FRAME_RATE - (time_us_32() - begin_time) ;
-      // yield for necessary amount of time
-      PT_YIELD_usec(spare_time) ;
      // NEVER exit while
     } // END WHILE(1)
   PT_END(pt);
@@ -193,26 +191,16 @@ static PT_THREAD (protothread_anim1(struct pt *pt))
     // Mark beginning of thread
     PT_BEGIN(pt);
 
-    // Variables for maintaining frame rate
-    static int begin_time ;
-    static int spare_time ;
-
     // Spawn a boid
     spawnBoid(&boid1_x, &boid1_y, &boid1_vx, &boid1_vy, 1);
 
     while(1) {
-      // Measure time at start of thread
-      begin_time = time_us_32() ;      
-      // erase boid
-      drawRect(fix2int15(boid1_x), fix2int15(boid1_y), 2, 2, BLACK);
+      // Wait for the signal from core 0
+      PT_SEM_SDK_WAIT(pt, &draw_semaphore) ;
       // update boid's position and velocity
       wallsAndEdges(&boid1_x, &boid1_y, &boid1_vx, &boid1_vy) ;
       // draw the boid at its new position
-      drawRect(fix2int15(boid1_x), fix2int15(boid1_y), 2, 2, color); 
-      // delay in accordance with frame rate
-      spare_time = FRAME_RATE - (time_us_32() - begin_time) ;
-      // yield for necessary amount of time
-      PT_YIELD_usec(spare_time) ;
+      fillCircle(fix2int15(boid1_x), fix2int15(boid1_y), 15, color); 
      // NEVER exit while
     } // END WHILE(1)
   PT_END(pt);
@@ -240,6 +228,10 @@ int main(){
 
   // initialize VGA
   initVGA() ;
+
+  // Initialize the semaphore
+  // Arguments: pointer to sem, initial count, max count
+  sem_init(&draw_semaphore, 0, 1) ;
 
   // start core 1 
   multicore_reset_core1();
