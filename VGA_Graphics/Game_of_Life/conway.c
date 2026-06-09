@@ -19,7 +19,7 @@
  *  - 153.6 kBytes of RAM (for pixel color data)
  *
  */
-#include "vga16_graphics_v2.h"
+#include "VGA/vga16_graphics_v3.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,6 +78,8 @@ int main() {
     drawCell(160, -50+106, WHITE) ;
     drawCell(160, -50+107, WHITE) ;
     drawCell(160, -50+108, WHITE) ;
+
+    copy_buffer_to_other() ;
     
     int i = 0 ;
     int j = 0 ;
@@ -93,7 +95,7 @@ int main() {
 
     while(1) {
 
-        start_time = time_us_32() ;
+        PT_YIELD_UNTIL(pt, draw_start_signal());
 
         for (j=1; j<239; j++) {
             for (i=1; i<319; i++) {
@@ -126,8 +128,5 @@ int main() {
                 saved_row_num = 1 ;
             }
         }
-
-        end_time = time_us_32() ;
-        printf("Time to animate: %f\n", (float)(end_time-start_time)*(1./1000000.)) ;
     }
 }
