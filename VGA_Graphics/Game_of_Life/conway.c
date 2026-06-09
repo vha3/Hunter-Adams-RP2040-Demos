@@ -78,8 +78,6 @@ int main() {
     drawCell(160, -50+106, WHITE) ;
     drawCell(160, -50+107, WHITE) ;
     drawCell(160, -50+108, WHITE) ;
-
-    copy_buffer_to_other() ;
     
     int i = 0 ;
     int j = 0 ;
@@ -129,6 +127,6 @@ int main() {
             }
         }
         end_time = time_us_32() ;
-        printf("%f\n", (float)(end_time - start_time)*(1./1000000.))
+        printf("%f\n", (float)(end_time - start_time)*(1./1000000.)) ;
     }
 }
