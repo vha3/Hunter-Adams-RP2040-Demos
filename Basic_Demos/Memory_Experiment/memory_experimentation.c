@@ -9,7 +9,8 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
-int variable ;
+const int flash_variable = 2 ;
+int ram_variable = 1 ;
 
 // GPIO ISR. Toggles LED
 void function_one() {
@@ -36,7 +37,8 @@ int main() {
         
         printf("Function 1: %x\n", (unsigned long int)function_one) ;
         printf("Function 2: %x\n", (unsigned long int)function_two) ;
-        printf("Variable location: %x\n\n", (unsigned long int)&variable) ;
+        printf("Flash variable location: %x\n\n", (unsigned long int)&flash_variable) ;
+        printf("Ram variable location: %x\n\n", (unsigned long int)&ram_variable) ;
         sleep_ms(5000) ;
     }
 
