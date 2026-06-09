@@ -95,7 +95,7 @@ int main() {
 
     while(1) {
 
-        PT_YIELD_UNTIL(pt, draw_start_signal());
+        start_time = time_us_32();
 
         for (j=1; j<239; j++) {
             for (i=1; i<319; i++) {
@@ -128,5 +128,7 @@ int main() {
                 saved_row_num = 1 ;
             }
         }
+        end_time = time_us_32() ;
+        printf("%f\n", (float)(end_time - start_time)*(1./1000000.))
     }
 }

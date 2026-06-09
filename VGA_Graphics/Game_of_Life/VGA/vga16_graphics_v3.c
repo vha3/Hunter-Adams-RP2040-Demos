@@ -82,9 +82,9 @@ DrawPixel is faster
 //Double-buffered!
 //Turn off second buffer to save memory on RP2040.
 // =============================
-#define DOUBLE_BUFFER_60
+//#define DOUBLE_BUFFER_60
 //#define DOUBLE_BUFFER_30
-//#define DOUBLE_BUFFER_NONE
+#define DOUBLE_BUFFER_NONE
 // !!!~=========================!!!
 // ===============================
 
@@ -377,28 +377,24 @@ void drawPixel(short x, short y, char color) {
 int checkNeighbors(short x, short y) {
     char * draw_loc = (current_draw_buffer + ((640 * y + x) >> 1)) ;
 
-    return ((*(draw_loc-320)&1) + (*(draw_loc+640)&1) + 
-        (*(draw_loc-1)&1) + (*(draw_loc+1)&1) +
-        (*(draw_loc-321)&1) + (*(draw_loc-319)&1) +
-        (*(draw_loc+641)&1) + (*(draw_loc+639)&1));
+    return (isAlive(x-1, y-1) + isAlive(x, y-1) + isAlive(x+1, y-1) +
+            isAlive(x-1, y) + isAlive(x+1, y) +
+            isAlive(x-1, y+1) + isAlive(x, y+1) + isAlive(x+1, y+1));
 }
 
 // VGA routine to draw a cell
 void drawCell(short x, short y, char color) {
 
-    // Which pixel is it - upper left corner
-    char * draw_loc = (current_draw_buffer + ((640 * y + x) >> 1)) ;
-
-    *draw_loc = (color | (color<<4)) ;
-    *(draw_loc+640) = (color | (color<<4)) ;
+    drawPixel(x<<1, y<<1, color) ;
+    drawPixel((x<<1) + 1, (y<<1), color) ;
+    drawPixel((x<<1), (y<<1) + 1, color) ;
+    drawPixel((x<<1) + 1, (y<<1) + 1, color) ;
 
 }
 
 // Check if alive
 int isAlive(short x, short y) {
-    char * draw_loc = (current_draw_buffer + ((640 * y + x) >> 1)) ;
-
-    return ((*draw_loc)&1) ;
+    return (readPixel(x<<1, y<<1) & 1) ;
 }
 
 // vertical line
