@@ -23,7 +23,11 @@ This repository contains a collection of VGA examples for the Raspberry Pi Pico.
 - Half of the screen is computed using floating point, and half using fixed point. Visually demonstrates speedup from fixed point.
 - [Video of Mandelbrot Set](https://www.youtube.com/watch?v=ySxg6M0f0eo&list=PLDqMkB5cbBA52vmAp0_8pW_GcbBtdBghU&index=9)
 
-#### Graphics Primitives
-- Demonstrates a bunch of graphics primitives
+#### Fonts and Colors (from Bruce)
+- This demo shows the six defined fonts which range from a small 5x7 pixel font to a 16x32 monster. It shows the color range and the defined color names, then falls into an animation loop which just moves graphics primitives acorss the screen. As the shapes move across pixel (320,120) their color is read back from the draw buffer and displayed.
 - *Probably the most useful starting point for general graphics projects*
-- [Video of Graphics Primitives](https://www.youtube.com/watch?v=J_jG3kbcAvg&list=PLDqMkB5cbBA4W8_FkjXW4WdzXWH0-Xyny&index=7)
+- [Bruce's Documentation](https://people.ece.cornell.edu/land/courses/ece4760/pi_pico/vga16_v3/index_vga16_v3.html)
+
+#### VGA Graphics Primitives (from Bruce)
+- This test attempted to fill the screen with lots of moving pixels to check for flicker and double buffer errors. It also demonstrates the triangle primitive and the polyline primitive. The yellow text in the lower left corner is drawn at random phase on the second core. This verifys that the new text drawing routines are re-entrant.
+- [Bruce's Documentation](https://people.ece.cornell.edu/land/courses/ece4760/pi_pico/vga16_v3/index_vga16_v3.html)
