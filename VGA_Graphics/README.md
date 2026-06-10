@@ -1,4 +1,4 @@
-# PIO-Based VGA Driver for RP2040
+# PIO-Based VGA Driver for RP2040/RP2350
 #### [V. Hunter Adams](https://vanhunteradams.com)
 
 This repository contains a collection of VGA examples for the Raspberry Pi Pico. 
