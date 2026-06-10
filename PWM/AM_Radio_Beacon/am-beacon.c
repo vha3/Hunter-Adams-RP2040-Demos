@@ -28,7 +28,7 @@
 
 // Low-level alarm infrastructure we'll be using
 #define ALARM_NUM 0
-#define ALARM_IRQ TIMER_IRQ_0
+#define ALARM_IRQ timer_hardware_alarm_get_irq_num(ALARM_NUM)
 #define DELAY 1000 // 1/Fs (in microseconds) - 1KHz tone
 
 // PWM wrap value and clock divide value
