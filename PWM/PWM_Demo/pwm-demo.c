@@ -23,9 +23,9 @@
 #include "pt_cornell_rp2040_v1_4.h"
 
 // PWM wrap value and clock divide value
-// For a CPU rate of 125 MHz, this gives
+// For a CPU rate of 150 MHz, this gives
 // a PWM frequency of 1 kHz.
-#define WRAPVAL 5000
+#define WRAPVAL 6000
 #define CLKDIV 25.0f
 
 // GPIO we're using for PWM
