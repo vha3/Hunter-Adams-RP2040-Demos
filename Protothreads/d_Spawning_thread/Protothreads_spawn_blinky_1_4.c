@@ -98,7 +98,7 @@ int main(){
   stdio_init_all() ;
   // announce the threader version on system reset
   // if there is a seral terminal attached
-  printf("\n\rProtothreads RP2040 v1.3 two-core, priority\n\r");
+  printf("\n\rProtothreads RP2040 v1.4 thread spawn\n\r");
 
   // === config threads ========================
   // for core 0
