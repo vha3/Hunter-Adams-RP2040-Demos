@@ -55,13 +55,13 @@ static PT_THREAD (protothread_serial(struct pt *pt))
     PT_BEGIN(pt) ;
     static int test_in ;
     while(1) {
-        sprintf(pt_serial_out_buffer, "input a duty cycle (0-5000): ");
+        sprintf(pt_serial_out_buffer, "input a duty cycle (0-6000): ");
         serial_write ;
         // spawn a thread to do the non-blocking serial read
         serial_read ;
         // convert input string to number
         sscanf(pt_serial_in_buffer,"%d", &test_in) ;
-        if (test_in > 5000) continue ;
+        if (test_in > 6000) continue ;
         else if (test_in < 0) continue ;
         else control = test_in ;
     }
@@ -94,7 +94,7 @@ int main() {
     pwm_set_clkdiv(slice_num, CLKDIV) ;
 
     // This sets duty cycle
-    pwm_set_chan_level(slice_num, PWM_CHAN_A, 3125);
+    pwm_set_chan_level(slice_num, PWM_CHAN_A, 3000);
 
     // Start the channel
     pwm_set_mask_enabled((1u << slice_num));
