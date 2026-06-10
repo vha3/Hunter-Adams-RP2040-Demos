@@ -7,7 +7,7 @@ This repository contains a collection of VGA examples for the Raspberry Pi Pico.
 [**Documentation for the VGA driver is available here.**](https://vanhunteradams.com/Pico/VGA/VGA.html)
 
 #### Animation Demo <--- *Starting point for Lab 2*
-- A basic animation demonstration, which incorporates multicore and protothreads
+- A basic animation demonstration, which incorporates multicore, protothreads, and double-buffering
 - Two balls bounce around in a box, the user can change the color of the balls via a serial interface
 
 #### Barnsley Fern
