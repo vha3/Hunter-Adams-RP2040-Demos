@@ -1287,9 +1287,13 @@ void clearRegion(short y1, short y2, short c) {
 // driver communication with thread
 // draw-sync signal to thread -- clears the flag!
 int draw_start_signal(void){
-  int temp = start_flag ;
-  start_flag = 0 ;
-  return temp ;
+  if(start_flag==1) {
+    start_flag = 0 ;
+    return 1 ;
+  }
+  else {
+    return 0 ;
+  }
 }
 
 // returns 1 for 60fps, 2 for 30fps, 3 for no double buffer
