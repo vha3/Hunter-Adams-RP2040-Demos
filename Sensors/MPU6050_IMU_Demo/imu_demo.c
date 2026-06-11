@@ -38,19 +38,46 @@
 #include "hardware/pio.h"
 #include "hardware/i2c.h"
 #include "hardware/clocks.h"
+#include "hardware/sync.h"
 // Include custom libraries
-#include "vga16_graphics_v2.h"
+#include "VGA/vga16_graphics_v3.h"
 #include "mpu6050.h"
 #include "pt_cornell_rp2040_v1_4.h"
 
+// We will start drawing at column 81
+#define LEFT_EDGE 81 
+
+// Rescale the measurements for display
+#define OLD_RANGE 500.  // (+/- 250)
+#define NEW_RANGE 150.  // (looks nice on VGA)
+#define OLD_MIN -250. 
+#define OLD_MAX 250. 
+#define ACCEL_SCALE 120.0
+
+// Place the plots
+#define TOP_PLOT_BOTTOM 230
+#define BOTTOM_PLOT_BOTTOM 430
+#define PLOT_WIDTH 530
+
 // Arrays in which raw measurements will be stored
 fix15 acceleration[3], gyro[3];
+
+// Arrays for circular display buffer
+fix15 ax[PLOT_WIDTH] ;
+fix15 ay[PLOT_WIDTH] ;
+fix15 az[PLOT_WIDTH] ;
+fix15 gx[PLOT_WIDTH] ;
+fix15 gy[PLOT_WIDTH] ;
+fix15 gz[PLOT_WIDTH] ;
+
+// Pointer to head of buffer
+volatile int head = 0 ;
 
 // character array
 char screentext[40];
 
 // draw speed
-int threshold = 10 ;
+volatile int threshold = 10 ;
 
 // Some macros for max/min/abs
 #define min(a,b) ((a<b) ? a:b)
@@ -61,44 +88,12 @@ int threshold = 10 ;
 static struct pt_sem vga_semaphore ;
 
 // Some paramters for PWM
-#define WRAPVAL 5000
+#define WRAPVAL 6000
 #define CLKDIV  25.0
 uint slice_num ;
 
-// Interrupt service routine
-void on_pwm_wrap() {
 
-    // Clear the interrupt flag that brought us here
-    pwm_clear_irq(pwm_gpio_to_slice_num(5));
-
-    // Read the IMU
-    // NOTE! This is in 15.16 fixed point. Accel in g's, gyro in deg/s
-    // If you want these values in floating point, call fix2float15() on
-    // the raw measurements.
-    mpu6050_read_raw(acceleration, gyro);
-
-    // Signal VGA to draw
-    PT_SEM_SIGNAL(pt, &vga_semaphore);
-}
-
-// Thread that draws to VGA display
-static PT_THREAD (protothread_vga(struct pt *pt))
-{
-    // Indicate start of thread
-    PT_BEGIN(pt) ;
-
-    // We will start drawing at column 81
-    static int xcoord = 81 ;
-    
-    // Rescale the measurements for display
-    static float OldRange = 500. ; // (+/- 250)
-    static float NewRange = 150. ; // (looks nice on VGA)
-    static float OldMin = -250. ;
-    static float OldMax = 250. ;
-
-    // Control rate of drawing
-    static int throttle ;
-
+void drawAxes() {
     // Draw the static aspects of the display
     setTextSize(1) ;
     setTextColor(WHITE);
@@ -132,42 +127,87 @@ static PT_THREAD (protothread_vga(struct pt *pt))
     sprintf(screentext, "-250") ;
     setCursor(45, 225) ;
     writeString(screentext) ;
-    
+}
 
-    while (true) {
-        // Wait on semaphore
-        PT_SEM_WAIT(pt, &vga_semaphore);
-        // Increment drawspeed controller
-        throttle += 1 ;
-        // If the controller has exceeded a threshold, draw
-        if (throttle >= threshold) { 
-            // Zero drawspeed controller
-            throttle = 0 ;
+volatile int throttle = 10 ;
 
-            // Erase a column
-            drawVLine(xcoord, 0, 480, BLACK) ;
+// Interrupt service routine
+void on_pwm_wrap() {
 
-            // Draw bottom plot (multiply by 120 to scale from +/-2 to +/-250)
-            drawPixel(xcoord, 430 - (int)(NewRange*((float)((fix2float15(acceleration[0])*120.0)-OldMin)/OldRange)), WHITE) ;
-            drawPixel(xcoord, 430 - (int)(NewRange*((float)((fix2float15(acceleration[1])*120.0)-OldMin)/OldRange)), RED) ;
-            drawPixel(xcoord, 430 - (int)(NewRange*((float)((fix2float15(acceleration[2])*120.0)-OldMin)/OldRange)), GREEN) ;
+    // Clear the interrupt flag that brought us here
+    pwm_clear_irq(pwm_gpio_to_slice_num(5));
+    gpio_put(14, !gpio_get(14)) ;
 
-            // Draw top plot
-            drawPixel(xcoord, 230 - (int)(NewRange*((float)((fix2float15(gyro[0]))-OldMin)/OldRange)), WHITE) ;
-            drawPixel(xcoord, 230 - (int)(NewRange*((float)((fix2float15(gyro[1]))-OldMin)/OldRange)), RED) ;
-            drawPixel(xcoord, 230 - (int)(NewRange*((float)((fix2float15(gyro[2]))-OldMin)/OldRange)), GREEN) ;
+    // Read the IMU
+    // NOTE! This is in 15.16 fixed point. Accel in g's, gyro in deg/s
+    // If you want these values in floating point, call fix2float15() on
+    // the raw measurements.
+    mpu6050_read_raw(acceleration, gyro);
 
-            // Update horizontal cursor
-            if (xcoord < 609) {
-                xcoord += 1 ;
-            }
-            else {
-                xcoord = 81 ;
-            }
+    // Increment drawspeed controller
+    throttle += 1 ;
+    // Maintain a circular buffer for display
+    if ((throttle >= threshold)) { 
+        // Zero drawspeed controller
+        throttle = 0 ;
+
+        // Replace oldest data in accel arrays with new sample
+        ax[head] = acceleration[0] ;
+        ay[head] = acceleration[1] ;
+        az[head] = acceleration[2] ;
+
+        // Replace oldest data in gyro arrays with new sample
+        gx[head] = gyro[0] ;
+        gy[head] = gyro[1] ;
+        gz[head] = gyro[2] ;
+
+        // Move the pointer to the oldest data
+        head = ((head+1) == PLOT_WIDTH) ? 0 : (head + 1) ;
+
+    }
+}
+
+static PT_THREAD (protothread_draw(struct pt *pt))
+{
+    PT_BEGIN(pt) ;
+
+    static int start ;
+    static int i ;
+
+    // Draw axes
+    drawAxes() ;
+    // Copy to other buffer
+    copy_buffer_to_other() ;
+
+    while(1) {
+        // Wait for a buffer swap
+        PT_YIELD_UNTIL(pt, draw_start_signal()) ;
+        gpio_put(15, !gpio_get(15)) ;
+        
+        // Clear the buffer, draw the axes
+        clearLowFrame(0, BLACK) ;
+        drawAxes() ;
+
+        // Plot data oldest-->newest
+        start = head ;
+        for (i = 0; i < PLOT_WIDTH; i++) {
+            drawPixel(LEFT_EDGE + i, (BOTTOM_PLOT_BOTTOM -
+                (int)(NEW_RANGE*((float)((fix2float15(ax[start])*ACCEL_SCALE)-OLD_MIN)/OLD_RANGE))), WHITE) ;
+            drawPixel(LEFT_EDGE + i, (BOTTOM_PLOT_BOTTOM -
+                (int)(NEW_RANGE*((float)((fix2float15(ay[start])*ACCEL_SCALE)-OLD_MIN)/OLD_RANGE))), RED) ;
+            drawPixel(LEFT_EDGE + i, (BOTTOM_PLOT_BOTTOM -
+                (int)(NEW_RANGE*((float)((fix2float15(az[start])*ACCEL_SCALE)-OLD_MIN)/OLD_RANGE))), GREEN) ;
+            drawPixel(LEFT_EDGE + i, (TOP_PLOT_BOTTOM -
+                (int)(NEW_RANGE*((float)((fix2float15(gx[start]))-OLD_MIN)/OLD_RANGE))), WHITE) ;
+            drawPixel(LEFT_EDGE + i, (TOP_PLOT_BOTTOM -
+                (int)(NEW_RANGE*((float)((fix2float15(gy[start]))-OLD_MIN)/OLD_RANGE))), RED) ;
+            drawPixel(LEFT_EDGE + i, (TOP_PLOT_BOTTOM -
+                (int)(NEW_RANGE*((float)((fix2float15(gz[start]))-OLD_MIN)/OLD_RANGE))), GREEN) ;
+            start = ((start+1)==PLOT_WIDTH) ? 0 : (start+1) ;
         }
     }
-    // Indicate end of thread
-    PT_END(pt);
+
+    PT_END(pt) ;
 }
 
 // User input thread. User can change draw speed
@@ -202,7 +242,10 @@ static PT_THREAD (protothread_serial(struct pt *pt))
 
 // Entry point for core 1
 void core1_entry() {
-    pt_add_thread(protothread_vga) ;
+    gpio_init(15) ;
+    gpio_set_dir(15, GPIO_OUT) ;
+    gpio_put(15, 0) ;
+    pt_add_thread(protothread_draw) ;
     pt_schedule_start ;
 }
 
@@ -222,10 +265,6 @@ int main() {
     i2c_init(I2C_CHAN, I2C_BAUD_RATE) ;
     gpio_set_function(SDA_PIN, GPIO_FUNC_I2C) ;
     gpio_set_function(SCL_PIN, GPIO_FUNC_I2C) ;
-
-    // Pullup resistors on breakout board, don't need to turn on internals
-    // gpio_pull_up(SDA_PIN) ;
-    // gpio_pull_up(SCL_PIN) ;
 
     // MPU6050 initialization
     mpu6050_reset();
@@ -259,7 +298,7 @@ int main() {
     // Start the channel
     pwm_set_mask_enabled((1u << slice_num));
 
-
+   
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////////// ROCK AND ROLL ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
@@ -268,6 +307,9 @@ int main() {
     multicore_launch_core1(core1_entry);
 
     // start core 0
+    gpio_init(14) ;
+    gpio_set_dir(14, GPIO_OUT) ;
+    gpio_put(14, 0) ;
     pt_add_thread(protothread_serial) ;
     pt_schedule_start ;
 

@@ -43,10 +43,13 @@ void mpu6050_read_raw(fix15 accel[3], fix15 gyro[3]) {
     uint8_t buffer[6];
     int16_t temp_accel, temp_gyro ;
 
+    // Status value
+    uint32_t success;
+
     // Start reading acceleration registers from register 0x3B for 6 bytes
     uint8_t val = 0x3B;
-    i2c_write_blocking(I2C_CHAN, ADDRESS, &val, 1, true); // true to keep master control of bus
-    i2c_read_blocking(I2C_CHAN, ADDRESS, buffer, 6, false);
+    i2c_write_timeout_us(I2C_CHAN, ADDRESS, &val, 1, true, 250); // true to keep master control of bus
+    i2c_read_timeout_us(I2C_CHAN, ADDRESS, buffer, 6, false, 250);
 
     for (int i = 0; i < 3; i++) {
         temp_accel = (buffer[i<<1] << 8 | buffer[(i<<1) + 1]);
@@ -57,8 +60,8 @@ void mpu6050_read_raw(fix15 accel[3], fix15 gyro[3]) {
     // Now gyro data from reg 0x43 for 6 bytes
     // The register is auto incrementing on each read
     val = 0x43;
-    i2c_write_blocking(I2C_CHAN, ADDRESS, &val, 1, true);
-    i2c_read_blocking(I2C_CHAN, ADDRESS, buffer, 6, false);  // False - finished with bus
+    i2c_write_timeout_us(I2C_CHAN, ADDRESS, &val, 1, true, 250);
+    i2c_read_timeout_us(I2C_CHAN, ADDRESS, buffer, 6, false, 250);  // False - finished with bus
 
     for (int i = 0; i < 3; i++) {
         temp_gyro = (buffer[i<<1] << 8 | buffer[(i<<1) + 1]);
