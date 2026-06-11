@@ -1,9 +1,9 @@
-# Demo Code for the Raspberry Pi Pico
+# Demo Code for the Raspberry Pi Pico (1 and 2)
 #### [V. Hunter Adams](https://vanhunteradams.com)
 
 ## What are these demos?
 
-This is a collection of RP2040 examples created and assembled for ECE 4760 at Cornell. These provide starting points for student assignments and projects. Some links to course materials are provided below.
+This is a collection of RP2040/RP2350 examples created and assembled for ECE 4760 at Cornell. These provide starting points for student assignments and projects. Some links to course materials are provided below. All demos should work with both the Pi Pico (RP2040) and the Pi Pico 2 (RP2350). For demos that use VGA, just be sure that double-buffering is *disabled* if you're using the RP2040 (there isn't enough RAM to double-buffer). You enable/disable double-buffering via [the macros](https://github.com/vha3/Hunter-Adams-RP2040-Demos/blob/917b5bf8adba8e312f70fd9bf9608993aadb5fea/VGA_Graphics/VGA_Fonts_and_Colors/VGA/vga16_graphics_v3.c#L85) in the vga16_graphics_v3.c files.
 
 > - [Course website](https://ece4760.github.io)
 > - [Lab 1](https://vanhunteradams.com/Pico/Birds/Birdsong.html): Synthesizing birdsong
