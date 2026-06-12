@@ -42,7 +42,7 @@
 #include "hardware/clocks.h"
 
 // VGA graphics library
-#include "vga16_graphics_v2.h"
+#include "VGA/vga16_graphics_v3.h"
 #include "pt_cornell_rp2040_v1_4.h"
 
 
@@ -53,10 +53,10 @@
 
 #define LED             25
 
-unsigned int keycodes[12] = {   0x28, 0x11, 0x21, 0x41, 0x12,
-                                0x22, 0x42, 0x14, 0x24, 0x44,
-                                0x18, 0x48} ;
-unsigned int scancodes[4] = {   0x01, 0x02, 0x04, 0x08} ;
+unsigned int keycodes[12] = {   0x57, 0x6E, 0x5E, 0x3E, 0x6D,
+                                0x5D, 0x3D, 0x6B, 0x5B, 0x3B,
+                                0x67, 0x37} ;
+unsigned int scancodes[4] = {   0xE, 0xD, 0xB, 0x7} ;
 unsigned int button = 0x70 ;
 
 
@@ -83,14 +83,14 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
             gpio_put_masked((0xF << BASE_KEYPAD_PIN),
                             (scancodes[i] << BASE_KEYPAD_PIN)) ;
             // Small delay required
-            sleep_us(1) ; 
+            sleep_us(1) ;
             // Read the keycode
             keypad = ((gpio_get_all() >> BASE_KEYPAD_PIN) & 0x7F) ;
             // Break if button(s) are pressed
-            if (keypad & button) break ;
+            if ((~keypad) & button) break ;
         }
         // If we found a button . . .
-        if (keypad & button) {
+        if ((~keypad) & button) {
             // Look for a valid keycode.
             for (i=0; i<NUMKEYS; i++) {
                 if (keypad == keycodes[i]) break ;
@@ -110,7 +110,9 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
             sprintf(keytext, "%d", i) ;
             setCursor(250, 20) ;
             setTextSize(2) ;
-            writeString(keytext) ;
+            if (i<10) writeString(keytext) ;
+            else if (i==10) writeString("*");
+            else writeString("#") ;
         }
 
         // Print key to terminal
@@ -162,14 +164,17 @@ int main() {
     ////////////////// KEYPAD INITS ///////////////////////
     // Initialize the keypad GPIO's
     gpio_init_mask((0x7F << BASE_KEYPAD_PIN)) ;
+    gpio_set_dir((BASE_KEYPAD_PIN+4), GPIO_IN);
+    gpio_set_dir((BASE_KEYPAD_PIN+5), GPIO_IN);
+    gpio_set_dir((BASE_KEYPAD_PIN+6), GPIO_IN);
     // Set row-pins to output
     gpio_set_dir_out_masked((0xF << BASE_KEYPAD_PIN)) ;
     // Set all output pins to low
-    gpio_put_masked((0xF << BASE_KEYPAD_PIN), (0x0 << BASE_KEYPAD_PIN)) ;
+    gpio_put_masked((0xF << BASE_KEYPAD_PIN), (0xF << BASE_KEYPAD_PIN)) ;
     // Turn on pulldown resistors for column pins (on by default)
-    gpio_pull_down((BASE_KEYPAD_PIN + 4)) ;
-    gpio_pull_down((BASE_KEYPAD_PIN + 5)) ;
-    gpio_pull_down((BASE_KEYPAD_PIN + 6)) ;
+    gpio_pull_up((BASE_KEYPAD_PIN+4)) ;
+    gpio_pull_up((BASE_KEYPAD_PIN+5)) ;
+    gpio_pull_up((BASE_KEYPAD_PIN+6)) ;
 
     // Add core 0 threads
     pt_add_thread(protothread_core_0) ;
