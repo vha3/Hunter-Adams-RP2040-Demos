@@ -8,3 +8,4 @@ These example projects demonstrate how to interface the RP2040 with devices for 
 #### Resistive Touchscreen
 - Demonstrates user input via resistive touchscreen to draw on the VGA display
 - [**Documentation available here**](https://vanhunteradams.com/Pico/VGA/Trackpad.html)
+- **Please note**: I've not yet tested this with RP2350. Be cautious of potential compatibility issues with Errata RP2350-E9
