@@ -17,7 +17,7 @@ add_executable( GATT_Server )
 target_sources( GATT_Server
                 PRIVATE
                 server_demo.c
-                VGA/vga16_graphics_v2.c)
+                VGA/vga16_graphics_v3.c)
 
 # must match with pio filename and executable name from above
 pico_generate_pio_header(GATT_Server ${CMAKE_CURRENT_LIST_DIR}/VGA/hsync.pio)

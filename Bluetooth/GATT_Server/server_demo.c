@@ -60,7 +60,7 @@
 
 // Low-level alarm infrastructure we'll be using for DDS
 #define ALARM_NUM 0
-#define ALARM_IRQ TIMER_IRQ_0
+#define ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, ALARM_NUM)
 
 // DDS parameters
 #define two32 4294967296.0 // 2^32 
@@ -202,11 +202,11 @@ static PT_THREAD (protothread_ble(struct pt *pt))
     setCursor(445, 10) ;
     setTextColor(BLACK) ;
     setTextSize(1) ;
-    writeString("Protothreads rp2040 v1.3") ;
+    writeString("Protothreads rp2040 v1.4") ;
     setCursor(445, 20) ;
     writeString("VGA 4-bit color") ;
     setCursor(445, 30) ;
-    writeString("Tested on picoW") ;
+    writeString("Tested on picoW 1 and 2") ;
     setCursor(270, 20) ;
     setTextColor2(WHITE, BLACK) ;
     writeStringBig("GATT Server Test") ;
