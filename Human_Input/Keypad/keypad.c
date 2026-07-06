@@ -12,15 +12,6 @@
  *  - GPIO 14  -->     Pin 6 (button col 2)
  *  - GPIO 15  -->     Pin 7 (button col 3)
  * 
- * VGA CONNECTIONS
- *  - GPIO 16 ---> VGA Hsync
- *  - GPIO 17 ---> VGA Vsync
- *  - GPIO 18 ---> 470 ohm resistor ---> VGA Green 
- *  - GPIO 19 ---> 330 ohm resistor ---> VGA Green
- *  - GPIO 20 ---> 330 ohm resistor ---> VGA Blue
- *  - GPIO 21 ---> 330 ohm resistor ---> VGA Red
- *  - RP2040 GND ---> VGA GND
- * 
  * SERIAL CONNECTIONS
  *  - GPIO 0        -->     UART RX (white)
  *  - GPIO 1        -->     UART TX (green)
@@ -41,8 +32,6 @@
 #include "hardware/spi.h"
 #include "hardware/clocks.h"
 
-// VGA graphics library
-#include "VGA/vga16_graphics_v3.h"
 #include "pt_cornell_rp2040_v1_4.h"
 
 
@@ -101,20 +90,6 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
         // Otherwise, indicate invalid/non-pressed buttons
         else (i=-1) ;
 
-
-
-        // Write key to VGA
-        if (i != prev_key) {
-            prev_key = i ;
-            fillRect(250, 20, 176, 30, RED); // red box
-            sprintf(keytext, "%d", i) ;
-            setCursor(250, 20) ;
-            setTextSize(2) ;
-            if (i<10) writeString(keytext) ;
-            else if (i==10) writeString("*");
-            else writeString("#") ;
-        }
-
         // Print key to terminal
         printf("\n%d", i) ;
 
@@ -132,29 +107,6 @@ int main() {
 
     // Initialize stdio
     stdio_init_all();
-
-    // Initialize the VGA screen
-    initVGA() ;
-
-    // Draw some filled rectangles
-    fillRect(64, 0, 176, 50, BLUE); // blue box
-    fillRect(250, 0, 176, 50, RED); // red box
-    fillRect(435, 0, 176, 50, GREEN); // green box
-
-    // Write some text
-    setTextColor(WHITE) ;
-    setCursor(65, 0) ;
-    setTextSize(1) ;
-    writeString("Raspberry Pi Pico") ;
-    setCursor(65, 10) ;
-    writeString("Keypad demo") ;
-    setCursor(65, 20) ;
-    writeString("Hunter Adams") ;
-    setCursor(65, 30) ;
-    writeString("vha3@cornell.edu") ;
-    setCursor(250, 0) ;
-    setTextSize(2) ;
-    writeString("Key Pressed:") ;
 
     // Map LED to GPIO port, make it low
     gpio_init(LED) ;

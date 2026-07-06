@@ -12,13 +12,8 @@ pico_sdk_init()
 
 add_executable(Keypad)
 
-# must match with pio filename and executable name from above
-pico_generate_pio_header(Keypad ${CMAKE_CURRENT_LIST_DIR}/VGA/hsync.pio)
-pico_generate_pio_header(Keypad ${CMAKE_CURRENT_LIST_DIR}/VGA/vsync.pio)
-pico_generate_pio_header(Keypad ${CMAKE_CURRENT_LIST_DIR}/VGA/rgb.pio)
-
 # must match with executable name and source file names
-target_sources(Keypad PRIVATE keypad.c VGA/vga16_graphics_v3.c)
+target_sources(Keypad PRIVATE keypad.c)
 
 # must match with executable name
 target_link_libraries(  Keypad
