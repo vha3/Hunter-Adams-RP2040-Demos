@@ -68,7 +68,7 @@ static PT_THREAD (protothread_core_0(struct pt *pt))
 
         // Scan the keypad!
         for (i=0; i<KEYROWS; i++) {
-            // Set a row high
+            // Set a row low
             gpio_put_masked((0xF << BASE_KEYPAD_PIN),
                             (scancodes[i] << BASE_KEYPAD_PIN)) ;
             // Small delay required
@@ -121,9 +121,9 @@ int main() {
     gpio_set_dir((BASE_KEYPAD_PIN+6), GPIO_IN);
     // Set row-pins to output
     gpio_set_dir_out_masked((0xF << BASE_KEYPAD_PIN)) ;
-    // Set all output pins to low
+    // Set all output pins to high
     gpio_put_masked((0xF << BASE_KEYPAD_PIN), (0xF << BASE_KEYPAD_PIN)) ;
-    // Turn on pulldown resistors for column pins (on by default)
+    // Turn on pullup resistors for column pins
     gpio_pull_up((BASE_KEYPAD_PIN+4)) ;
     gpio_pull_up((BASE_KEYPAD_PIN+5)) ;
     gpio_pull_up((BASE_KEYPAD_PIN+6)) ;

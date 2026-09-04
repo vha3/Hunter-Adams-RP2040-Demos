@@ -53,6 +53,7 @@
 // VGA driver
 #include "VGA/vga16_graphics_v3.h"
 
+
 // GAP and GATT
 #include "GAP_Advertisement/gap_config.h"
 #include "GATT_Service/service_implementation.h"
