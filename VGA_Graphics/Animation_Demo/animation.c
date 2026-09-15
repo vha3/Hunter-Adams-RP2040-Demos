@@ -58,9 +58,6 @@ typedef signed int fix15 ;
 #define hitLeft(a) (a<int2fix15(100))
 #define hitRight(a) (a>int2fix15(540))
 
-// uS per frame
-#define FRAME_RATE 33000
-
 // the color of the boid
 char color = WHITE ;
 
