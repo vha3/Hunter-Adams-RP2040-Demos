@@ -16,7 +16,7 @@
 #include "hardware/gpio.h"
 
 // GPIO ISR. Toggles LED
-void gpio_callback() {
+void gpio_callback(uint gpio, uint32_t event_mask) {
     gpio_put(25, !gpio_get(25)) ;
 }
 
